@@ -382,6 +382,62 @@ export async function changePasswordController(req, res) {
 }
 
 // ----------------------
+// GET SECURITY QUESTIONS FOR FORGOT PASSWORD
+// ----------------------
+export async function getSecurityQuestionsForForgotPasswordController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email is required" });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    if (!user) {
+      // Log failed attempt
+      await auditHelper({
+        req,
+        action: "GET_SECURITY_QUESTIONS_FAILED_USER_NOT_FOUND",
+        entityType: "USER",
+        metadata: { email, ip, userAgent },
+        severity: "WARNING",
+        status: "FAILURE",
+      });
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    // Return only the questions (not the hashes)
+    const securityQuestions = user.securityQuestions.map((sq) => ({
+      question: sq.question,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      securityQuestions,
+    });
+  } catch (error) {
+    console.error(error);
+
+    await auditHelper({
+      req,
+      action: "GET_SECURITY_QUESTIONS_FAILED_SERVER_ERROR",
+      entityType: "USER",
+      metadata: { error: error.message, ip, userAgent },
+      severity: "CRITICAL",
+      status: "FAILURE",
+    });
+
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to retrieve security questions" });
+  }
+}
+
+// ----------------------
 // FORGOT PASSWORD
 // ----------------------
 export async function forgotPasswordController(req, res) {

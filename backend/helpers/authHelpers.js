@@ -352,12 +352,13 @@ export async function changePassword(
   newPassword,
   securityAnswers,
   req,
-  forceLogoutAllSessions = false
+  forceLogoutAllSessions = false,
+  forceChange = false
 ) {
   const now = new Date();
 
-  // Step 0: Check minimum password age
-  if (user.passwordChangedAt) {
+  // Step 0: Check minimum password age (skip for force change)
+  if (!forceChange && user.passwordChangedAt) {
     if (now - user.passwordChangedAt < MIN_PASSWORD_AGE) {
       return {
         success: false,
@@ -366,13 +367,22 @@ export async function changePassword(
     }
   }
 
-  // Step 1: Validate current password
-  const validCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!validCurrent)
-    return { success: false, error: "Current password is incorrect" };
+  // Step 1: Validate current password (skip for force change)
+  if (!forceChange) {
+    const validCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!validCurrent)
+      return { success: false, error: "Current password is incorrect" };
+  }
 
-  // Step 2: Validate security answers (non-admin)
-  if (user.role !== "ADMIN") {
+  // Step 2: Validate security answers (non-admin, skip for force change)
+  if (!forceChange && user.role !== "ADMIN") {
+    const secAnsValid = await validateSecurityAnswers(user, securityAnswers);
+    if (!secAnsValid.success)
+      return { success: false, error: secAnsValid.error };
+  }
+
+  // Step 2b: Validate security answers (for force change, always validate)
+  if (forceChange) {
     const secAnsValid = await validateSecurityAnswers(user, securityAnswers);
     if (!secAnsValid.success)
       return { success: false, error: secAnsValid.error };

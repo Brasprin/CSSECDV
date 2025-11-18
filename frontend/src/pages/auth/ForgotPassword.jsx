@@ -47,6 +47,7 @@ export default function ForgotPassword() {
   });
   const [passwordMatch, setPasswordMatch] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleEmailChange = (e) => {
@@ -71,10 +72,9 @@ export default function ForgotPassword() {
       }
 
       // Fetch user's security questions
-      const response = await authService.forgotPassword({
-        email: formData.email.trim(),
-        step: "verify",
-      });
+      const response = await authService.getSecurityQuestionsForForgotPassword(
+        formData.email.trim()
+      );
 
       if (response.data.success && response.data.securityQuestions) {
         setUserEmail(formData.email.trim());
@@ -194,15 +194,20 @@ export default function ForgotPassword() {
       });
 
       if (response.data.success) {
-        navigate("/login", {
-          state: { message: "Password reset successfully! Please log in." },
-        });
+        setSuccess("Redirecting to login...");
+        setLoading(false);
+        
+        // Redirect after 3 seconds
+        setTimeout(() => {
+          navigate("/login", {
+            state: { message: "Password reset successfully! Please log in." },
+          });
+        }, 3000);
       }
     } catch (err) {
       const errorMessage =
         err.response?.data?.error || "Security question answers are invalid";
       setError(errorMessage);
-    } finally {
       setLoading(false);
     }
   };
@@ -229,6 +234,17 @@ export default function ForgotPassword() {
 
   return (
     <div className={styles.forgotPasswordContainer}>
+      {/* Success Popup Modal */}
+      {success && (
+        <div className={styles.successOverlay}>
+          <div className={styles.successContent}>
+            <div className={styles.successIcon}>✓</div>
+            <h2 className={styles.successTitle}>Password Reset Successfully!</h2>
+            <p className={styles.successMessage}>{success}</p>
+          </div>
+        </div>
+      )}
+
       <div className={styles.forgotPasswordCard}>
         {/* Header */}
         <div className={styles.header}>

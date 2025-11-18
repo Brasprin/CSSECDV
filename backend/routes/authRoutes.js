@@ -6,6 +6,7 @@ import {
   logoutController,
   changePasswordController,
   forgotPasswordController,
+  getSecurityQuestionsForForgotPasswordController,
   adminResetUserController,
   getSecurityQuestionPool,
 } from "../controllers/authController.js";
@@ -19,6 +20,7 @@ const router = express.Router();
 router.post("/register", registerController);
 router.post("/login", loginController);
 router.post("/refresh-token", refreshTokenController);
+router.post("/forgot-password/get-questions", getSecurityQuestionsForForgotPasswordController);
 router.post("/forgot-password", forgotPasswordController);
 
 // ----------------------

@@ -20,6 +20,8 @@ export const authService = {
       headers: { Authorization: `Bearer ${token}` },
     }),
   forgotPassword: (data) => axios.post(`${API_URL}/forgot-password`, data),
+  getSecurityQuestionsForForgotPassword: (email) =>
+    axios.post(`${API_URL}/forgot-password/get-questions`, { email }),
   adminResetUser: (data, token) =>
     axios.post(`${API_URL}/admin/reset-user`, data, {
       headers: { Authorization: `Bearer ${token}` },
