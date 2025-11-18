@@ -7,6 +7,9 @@ import {
   deleteCourseController,
   enrollStudentController,
   dropStudentController,
+  gradeStudentController,
+  getCourseGradesController,
+  getStudentGradesController,
 } from "../controllers/courseController.js";
 
 import { requireAuth } from "../middleware/authMiddleware.js";
@@ -16,7 +19,7 @@ import { requireStudent } from "../middleware/requireStudent.js";
 const router = express.Router();
 
 // ----------------------
-// Teacher routes (protected)
+// TEACHER COURSE MANAGEMENT (Protected)
 // ----------------------
 router.post("/", requireAuth, requireTeacher, createCourseController);
 router.get(
@@ -35,7 +38,7 @@ router.delete(
 );
 
 // ----------------------
-// Student routes (protected)
+// STUDENT ENROLLMENT (Protected)
 // ----------------------
 router.post(
   "/:courseId/enroll",
@@ -48,6 +51,32 @@ router.delete(
   requireAuth,
   requireStudent,
   dropStudentController
+);
+
+// ----------------------
+// TEACHER GRADING (Protected)
+// ----------------------
+router.post(
+  "/:courseId/grade/:studentId",
+  requireAuth,
+  requireTeacher,
+  gradeStudentController
+);
+router.get(
+  "/:courseId/grades",
+  requireAuth,
+  requireTeacher,
+  getCourseGradesController
+);
+
+// ----------------------
+// STUDENT VIEW GRADES (Protected)
+// ----------------------
+router.get(
+  "/grades/me",
+  requireAuth,
+  requireStudent,
+  getStudentGradesController
 );
 
 export default router;

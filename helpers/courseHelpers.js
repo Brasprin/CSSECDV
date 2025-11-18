@@ -1,106 +1,201 @@
-import {
-  createCourseHelper,
-  getTeacherCoursesHelper,
-  getCourseByIdHelper,
-  updateCourseHelper,
-  deleteCourseHelper,
-  enrollStudentHelper,
-  dropStudentHelper,
-} from "../helpers/courseHelpers.js";
+import Course from "../models/Course.js";
+import Enrollment from "../models/Enrollment.js";
+import Grade from "../models/Grade.js";
+
+const DEFAULT_CAPACITY = 40;
+const VALID_GRADES = [
+  "4.0",
+  "3.5",
+  "3.0",
+  "2.5",
+  "2.0",
+  "1.5",
+  "1.0",
+  "0.0",
+  "W",
+];
+
+// ----------------------
+// Validation Helpers
+// ----------------------
+function validateCapacity(capacity) {
+  if (capacity == null) return DEFAULT_CAPACITY;
+  if (
+    typeof capacity !== "number" ||
+    !Number.isInteger(capacity) ||
+    capacity < 0
+  ) {
+    throw new Error("Capacity must be a non-negative integer");
+  }
+  return capacity;
+}
+
+function validateGrade(value) {
+  if (!VALID_GRADES.includes(value)) {
+    throw new Error(`Invalid grade value. Allowed: ${VALID_GRADES.join(", ")}`);
+  }
+  return value;
+}
 
 // ----------------------
 // COURSE MANAGEMENT
 // ----------------------
-export async function createCourseController(req, res) {
-  try {
-    const teacherId = req.user._id;
-    const course = await createCourseHelper(req.body, teacherId);
-    return res.status(201).json({ success: true, course });
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
-  }
+export async function createCourseHelper(courseData, teacherId) {
+  const { code, section, title, description, capacity } = courseData;
+  const validatedCapacity = validateCapacity(capacity);
+
+  const newCourse = new Course({
+    code,
+    section,
+    title,
+    description,
+    capacity: validatedCapacity,
+    teacher: teacherId,
+    createdBy: teacherId,
+  });
+
+  await newCourse.save();
+  return newCourse;
 }
 
-export async function getTeacherCoursesController(req, res) {
-  try {
-    const courses = await getTeacherCoursesHelper(req.user._id);
-    return res.status(200).json({ success: true, courses });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, error: "Failed to fetch courses" });
-  }
+export async function getTeacherCoursesHelper(teacherId) {
+  return await Course.find({ teacher: teacherId });
 }
 
-export async function getCourseController(req, res) {
-  try {
-    const courseId = req.params.courseId;
-    const course = await getCourseByIdHelper(courseId, req.user._id);
-    if (!course)
-      return res
-        .status(404)
-        .json({ success: false, error: "Course not found" });
-    return res.status(200).json({ success: true, course });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, error: "Failed to fetch course" });
-  }
+export async function getCourseByIdHelper(courseId, teacherId) {
+  return await Course.findOne({ _id: courseId, teacher: teacherId });
 }
 
-export async function updateCourseController(req, res) {
-  try {
-    const courseId = req.params.courseId;
-    const course = await updateCourseHelper(courseId, req.user._id, req.body);
-    if (!course)
-      return res
-        .status(404)
-        .json({ success: false, error: "Course not found" });
-    return res.status(200).json({ success: true, course });
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
-  }
+export async function updateCourseHelper(courseId, teacherId, updates) {
+  const course = await Course.findOne({ _id: courseId, teacher: teacherId });
+  if (!course) return null;
+
+  if (updates.capacity !== undefined)
+    course.capacity = validateCapacity(updates.capacity);
+  if (updates.title) course.title = updates.title;
+  if (updates.section) course.section = updates.section;
+  if (updates.description) course.description = updates.description;
+  if (updates.status) course.status = updates.status;
+  if (updates.droppingAllowed !== undefined)
+    course.droppingAllowed = updates.droppingAllowed;
+
+  course.updatedAt = new Date();
+  await course.save();
+  return course;
 }
 
-export async function deleteCourseController(req, res) {
-  try {
-    const courseId = req.params.courseId;
-    const course = await deleteCourseHelper(courseId, req.user._id);
-    if (!course)
-      return res
-        .status(404)
-        .json({ success: false, error: "Course not found" });
-    return res
-      .status(200)
-      .json({ success: true, message: "Course deleted successfully" });
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
-  }
+export async function deleteCourseHelper(courseId, teacherId) {
+  return await Course.findOneAndDelete({ _id: courseId, teacher: teacherId });
 }
 
 // ----------------------
 // ENROLLMENT MANAGEMENT
 // ----------------------
-export async function enrollStudentController(req, res) {
-  try {
-    const enrollment = await enrollStudentHelper(
-      req.params.courseId,
-      req.user._id
-    );
-    return res.status(200).json({ success: true, enrollment });
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
+export async function enrollStudentHelper(courseId, studentId) {
+  const course = await Course.findById(courseId);
+  if (!course) throw new Error("Course not found");
+  if (course.status === "CLOSED")
+    throw new Error("Cannot enroll: course is closed");
+
+  const enrolledCount = await Enrollment.countDocuments({
+    courseId,
+    status: "ENROLLED",
+  });
+  if (enrolledCount >= course.capacity)
+    throw new Error("Cannot enroll: course is full");
+
+  const existingEnrollment = await Enrollment.findOne({
+    courseId,
+    student: studentId,
+  });
+  if (existingEnrollment) {
+    if (existingEnrollment.status === "DROPPED") {
+      existingEnrollment.status = "ENROLLED";
+      existingEnrollment.updatedAt = new Date();
+      return await existingEnrollment.save();
+    }
+    throw new Error("Cannot enroll: student already enrolled");
   }
+
+  return await Enrollment.create({ courseId, student: studentId });
 }
 
-export async function dropStudentController(req, res) {
-  try {
-    const enrollment = await dropStudentHelper(
-      req.params.courseId,
-      req.user._id
-    );
-    return res.status(200).json({ success: true, enrollment });
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
+export async function dropStudentHelper(courseId, studentId) {
+  const course = await Course.findById(courseId);
+  if (!course) throw new Error("Course not found");
+  if (!course.droppingAllowed)
+    throw new Error("Cannot drop: dropping is not allowed for this course");
+
+  const enrollment = await Enrollment.findOne({ courseId, student: studentId });
+  if (!enrollment)
+    throw new Error("Cannot drop: student not enrolled in this course");
+
+  enrollment.status = "DROPPED";
+  enrollment.updatedAt = new Date();
+  return await enrollment.save();
+}
+
+export async function finishEnrollmentHelper(courseId, studentId) {
+  const enrollment = await Enrollment.findOne({ courseId, student: studentId });
+  if (!enrollment) throw new Error("Student not enrolled in this course");
+  if (enrollment.status !== "ENROLLED") {
+    throw new Error(`Cannot finish: student status is ${enrollment.status}`);
   }
+
+  enrollment.status = "FINISHED";
+  enrollment.updatedAt = new Date();
+  return await enrollment.save();
+}
+
+// ----------------------
+// GRADING MANAGEMENT
+// ----------------------
+export async function gradeStudentHelper(
+  courseId,
+  studentId,
+  gradeValue,
+  teacherId
+) {
+  const course = await Course.findById(courseId);
+  if (!course) throw new Error("Course not found");
+  if (course.teacher.toString() !== teacherId.toString()) {
+    throw new Error("Unauthorized: Only the course teacher can grade");
+  }
+
+  validateGrade(gradeValue);
+
+  let grade = await Grade.findOne({ courseId, studentId });
+  if (grade) {
+    grade.value = gradeValue;
+    grade.gradedBy = teacherId;
+    grade.version += 1;
+    grade.updatedAt = new Date();
+  } else {
+    grade = new Grade({
+      courseId,
+      studentId,
+      value: gradeValue,
+      gradedBy: teacherId,
+    });
+  }
+
+  await grade.save();
+
+  // Mark enrollment FINISHED
+  await finishEnrollmentHelper(courseId, studentId);
+
+  return grade;
+}
+
+export async function getCourseGradesHelper(courseId, teacherId) {
+  const course = await Course.findById(courseId);
+  if (!course) throw new Error("Course not found");
+  if (course.teacher.toString() !== teacherId.toString()) {
+    throw new Error("Unauthorized: Only the course teacher can view grades");
+  }
+  return await Grade.find({ courseId });
+}
+
+export async function getStudentGradesHelper(studentId) {
+  return await Grade.find({ studentId });
 }

@@ -6,6 +6,9 @@ import {
   deleteCourseHelper,
   enrollStudentHelper,
   dropStudentHelper,
+  gradeStudentHelper,
+  getCourseGradesHelper,
+  getStudentGradesHelper,
 } from "../helpers/courseHelpers.js";
 
 // ----------------------
@@ -100,6 +103,55 @@ export async function dropStudentController(req, res) {
       req.user._id
     );
     return res.status(200).json({ success: true, enrollment });
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
+
+// ----------------------
+// GRADING MANAGEMENT
+// ----------------------
+export async function gradeStudentController(req, res) {
+  try {
+    const { courseId, studentId } = req.params;
+    const teacherId = req.user._id;
+    const { value } = req.body;
+
+    const grade = await gradeStudentHelper(
+      courseId,
+      studentId,
+      value,
+      teacherId
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Student graded successfully",
+      grade,
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
+
+export async function getCourseGradesController(req, res) {
+  try {
+    const teacherId = req.user._id;
+    const { courseId } = req.params;
+
+    const grades = await getCourseGradesHelper(courseId, teacherId);
+    return res.status(200).json({ success: true, grades });
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
+
+export async function getStudentGradesController(req, res) {
+  try {
+    const studentId = req.user._id;
+
+    const grades = await getStudentGradesHelper(studentId);
+    return res.status(200).json({ success: true, grades });
   } catch (error) {
     return res.status(400).json({ success: false, error: error.message });
   }
