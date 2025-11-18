@@ -11,99 +11,334 @@ import {
   getStudentGradesHelper,
 } from "../helpers/courseHelpers.js";
 
+import { auditHelper } from "../helpers/auditHelper.js";
+
 // ----------------------
 // COURSE MANAGEMENT
 // ----------------------
 export async function createCourseController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+
   try {
     const teacherId = req.user._id;
     const course = await createCourseHelper(req.body, teacherId);
+
+    // Log successful course creation
+    await auditHelper({
+      req,
+      action: "CREATE_COURSE_SUCCESS",
+      entityType: "COURSE",
+      entityId: course._id,
+      metadata: { courseTitle: course.title, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(201).json({ success: true, course });
   } catch (error) {
+    console.error(error);
+
+    // Log failed course creation
+    await auditHelper({
+      req,
+      action: "CREATE_COURSE_FAILED",
+      entityType: "COURSE",
+      metadata: { error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
 
 export async function getTeacherCoursesController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+
   try {
     const courses = await getTeacherCoursesHelper(req.user._id);
+
+    // Log action of viewing teacher courses
+    await auditHelper({
+      req,
+      action: "VIEW_TEACHER_COURSES",
+      entityType: "COURSE",
+      entityId: req.user._id,
+      metadata: { count: courses.length, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, courses });
   } catch (error) {
+    console.error(error);
+
+    // Log failed attempt to fetch courses
+    await auditHelper({
+      req,
+      action: "VIEW_TEACHER_COURSES_FAILED",
+      entityType: "COURSE",
+      metadata: { error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
     return res
       .status(500)
       .json({ success: false, error: "Failed to fetch courses" });
   }
 }
 
-export async function getCourseController(req, res) {
+export async function getCourseByIdController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const courseId = req.params.courseId;
+
   try {
-    const courseId = req.params.courseId;
-    const course = await getCourseByIdHelper(courseId, req.user._id);
-    if (!course)
-      return res
-        .status(404)
-        .json({ success: false, error: "Course not found" });
+    const course = await getCourseByIdHelper(courseId);
+
+    await auditHelper({
+      req,
+      action: "VIEW_COURSE_BY_ID",
+      entityType: "COURSE",
+      entityId: courseId,
+      metadata: { ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, course });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, error: "Failed to fetch course" });
+    console.error(error);
+
+    await auditHelper({
+      req,
+      action: "VIEW_COURSE_BY_ID_FAILED",
+      entityType: "COURSE",
+      entityId: courseId,
+      metadata: { error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
+    return res.status(404).json({ success: false, error: "Course not found" });
   }
 }
 
 export async function updateCourseController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const courseId = req.params.courseId;
+
   try {
-    const courseId = req.params.courseId;
     const course = await updateCourseHelper(courseId, req.user._id, req.body);
-    if (!course)
+
+    if (!course) {
+      // Log failed update attempt
+      await auditHelper({
+        req,
+        action: "UPDATE_COURSE_FAILED_NOT_FOUND",
+        entityType: "COURSE",
+        entityId: courseId,
+        metadata: { ip, userAgent },
+        severity: "WARNING",
+        status: "FAILURE",
+      });
+
       return res
         .status(404)
         .json({ success: false, error: "Course not found" });
+    }
+
+    // Log successful course update
+    await auditHelper({
+      req,
+      action: "UPDATE_COURSE_SUCCESS",
+      entityType: "COURSE",
+      entityId: courseId,
+      metadata: { updatedFields: req.body, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, course });
   } catch (error) {
+    console.error(error);
+
+    // Log server error during update
+    await auditHelper({
+      req,
+      action: "UPDATE_COURSE_FAILED_SERVER_ERROR",
+      entityType: "COURSE",
+      entityId: courseId,
+      metadata: { error: error.message, ip, userAgent },
+      severity: "CRITICAL",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
 
 export async function deleteCourseController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const courseId = req.params.courseId;
+
   try {
-    const courseId = req.params.courseId;
     const course = await deleteCourseHelper(courseId, req.user._id);
-    if (!course)
+
+    if (!course) {
+      // Log failed deletion attempt
+      await auditHelper({
+        req,
+        action: "DELETE_COURSE_FAILED_NOT_FOUND",
+        entityType: "COURSE",
+        entityId: courseId,
+        metadata: { ip, userAgent },
+        severity: "WARNING",
+        status: "FAILURE",
+      });
+
       return res
         .status(404)
         .json({ success: false, error: "Course not found" });
+    }
+
+    // Log successful course deletion
+    await auditHelper({
+      req,
+      action: "DELETE_COURSE_SUCCESS",
+      entityType: "COURSE",
+      entityId: courseId,
+      metadata: { ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res
       .status(200)
       .json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
+    console.error(error);
+
+    // Log server error during deletion
+    await auditHelper({
+      req,
+      action: "DELETE_COURSE_FAILED_SERVER_ERROR",
+      entityType: "COURSE",
+      entityId: courseId,
+      metadata: { error: error.message, ip, userAgent },
+      severity: "CRITICAL",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
-
 // ----------------------
 // ENROLLMENT MANAGEMENT
 // ----------------------
 export async function enrollStudentController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const courseId = req.params.courseId;
+
   try {
-    const enrollment = await enrollStudentHelper(
-      req.params.courseId,
-      req.user._id
-    );
+    const enrollment = await enrollStudentHelper(courseId, req.user._id);
+
+    // Log successful enrollment
+    await auditHelper({
+      req,
+      action: "ENROLL_STUDENT_SUCCESS",
+      entityType: "ENROLLMENT",
+      entityId: enrollment._id,
+      metadata: { courseId, studentId: req.user._id, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, enrollment });
   } catch (error) {
+    console.error(error);
+
+    // Log failed enrollment
+    await auditHelper({
+      req,
+      action: "ENROLL_STUDENT_FAILED",
+      entityType: "ENROLLMENT",
+      metadata: {
+        courseId,
+        studentId: req.user._id,
+        error: error.message,
+        ip,
+        userAgent,
+      },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
 
 export async function dropStudentController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const courseId = req.params.courseId;
+
   try {
-    const enrollment = await dropStudentHelper(
-      req.params.courseId,
-      req.user._id
-    );
+    const enrollment = await dropStudentHelper(courseId, req.user._id);
+
+    if (!enrollment) {
+      // Log failed drop (not enrolled)
+      await auditHelper({
+        req,
+        action: "DROP_STUDENT_FAILED_NOT_ENROLLED",
+        entityType: "ENROLLMENT",
+        metadata: { courseId, studentId: req.user._id, ip, userAgent },
+        severity: "WARNING",
+        status: "FAILURE",
+      });
+
+      return res
+        .status(404)
+        .json({ success: false, error: "Student not enrolled in course" });
+    }
+
+    // Log successful drop
+    await auditHelper({
+      req,
+      action: "DROP_STUDENT_SUCCESS",
+      entityType: "ENROLLMENT",
+      entityId: enrollment._id,
+      metadata: { courseId, studentId: req.user._id, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, enrollment });
   } catch (error) {
+    console.error(error);
+
+    // Log server error during drop
+    await auditHelper({
+      req,
+      action: "DROP_STUDENT_FAILED_SERVER_ERROR",
+      entityType: "ENROLLMENT",
+      metadata: {
+        courseId,
+        studentId: req.user._id,
+        error: error.message,
+        ip,
+        userAgent,
+      },
+      severity: "CRITICAL",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
@@ -112,11 +347,13 @@ export async function dropStudentController(req, res) {
 // GRADING MANAGEMENT
 // ----------------------
 export async function gradeStudentController(req, res) {
-  try {
-    const { courseId, studentId } = req.params;
-    const teacherId = req.user._id;
-    const { value } = req.body;
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const { courseId, studentId } = req.params;
+  const teacherId = req.user._id;
+  const { value } = req.body;
 
+  try {
     const grade = await gradeStudentHelper(
       courseId,
       studentId,
@@ -124,35 +361,123 @@ export async function gradeStudentController(req, res) {
       teacherId
     );
 
+    // Log successful grading
+    await auditHelper({
+      req,
+      action: "GRADE_STUDENT_SUCCESS",
+      entityType: "GRADE",
+      entityId: grade._id,
+      metadata: {
+        courseId,
+        studentId,
+        teacherId,
+        gradeValue: value,
+        ip,
+        userAgent,
+      },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({
       success: true,
       message: "Student graded successfully",
       grade,
     });
   } catch (error) {
+    console.error(error);
+
+    // Log failed grading
+    await auditHelper({
+      req,
+      action: "GRADE_STUDENT_FAILED",
+      entityType: "GRADE",
+      metadata: {
+        courseId,
+        studentId,
+        teacherId,
+        gradeValue: value,
+        error: error.message,
+        ip,
+        userAgent,
+      },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
 
 export async function getCourseGradesController(req, res) {
-  try {
-    const teacherId = req.user._id;
-    const { courseId } = req.params;
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const teacherId = req.user._id;
+  const { courseId } = req.params;
 
+  try {
     const grades = await getCourseGradesHelper(courseId, teacherId);
+
+    // Log successful fetch
+    await auditHelper({
+      req,
+      action: "GET_COURSE_GRADES_SUCCESS",
+      entityType: "GRADE",
+      metadata: { courseId, teacherId, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, grades });
   } catch (error) {
+    console.error(error);
+
+    // Log failed fetch
+    await auditHelper({
+      req,
+      action: "GET_COURSE_GRADES_FAILED",
+      entityType: "GRADE",
+      metadata: { courseId, teacherId, error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
 
 export async function getStudentGradesController(req, res) {
-  try {
-    const studentId = req.user._id;
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const studentId = req.user._id;
 
+  try {
     const grades = await getStudentGradesHelper(studentId);
+
+    // Log successful fetch
+    await auditHelper({
+      req,
+      action: "GET_STUDENT_GRADES_SUCCESS",
+      entityType: "GRADE",
+      metadata: { studentId, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
     return res.status(200).json({ success: true, grades });
   } catch (error) {
+    console.error(error);
+
+    // Log failed fetch
+    await auditHelper({
+      req,
+      action: "GET_STUDENT_GRADES_FAILED",
+      entityType: "GRADE",
+      metadata: { studentId, error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
     return res.status(400).json({ success: false, error: error.message });
   }
 }
