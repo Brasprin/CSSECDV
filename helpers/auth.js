@@ -1,12 +1,11 @@
 import bcrypt from "bcrypt";
-import Session from "../models/Session.js";
-import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { auditAuth } from "./audit.js"; //  audit helper
+import User from "../models/User.js";
+import Session from "../models/Session.js";
 
 const MAX_ATTEMPTS = 5;
 const LOCK_TIME = 10 * 60 * 1000; // 10 min
-const MIN_PASSWORD_AGE = 24 * 60 * 60 * 1000; // 24 hours
+const MIN_PASSWORD_AGE = 24 * 60 * 60 * 1000; // 1 day in milliseconds
 const PASSWORD_HISTORY_LIMIT = 2;
 const REQUIRED_SECURITY_QUESTIONS = 3;
 const MIN_SECURITY_ANSWER_LENGTH = 3;
@@ -22,170 +21,218 @@ const SECURITY_QUESTION_POOL = [
   "What is the name of your first best friend from childhood?",
 ];
 
+// ----------------------
+// Email & Password Utils
+// ----------------------
 export function validateEmail(email) {
-  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
 }
 
 export async function checkEmailExists(email) {
   try {
-    if (!email || typeof email !== "string") {
-      return {
-        success: false,
-        error: "Email is required and must be a string",
-      };
-    }
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if email format is valid first
-    if (!validateEmail(normalizedEmail)) {
-      return {
-        success: false,
-        error: "Invalid email format",
-      };
-    }
-
-    // Query database for existing email
-    const existingUser = await User.findOne({ email: normalizedEmail });
-
-    if (existingUser) {
-      return {
-        success: false,
-        exists: true,
-        error: "Email already registered",
-      };
-    }
-
-    return {
-      success: true,
-      exists: false,
-      message: "Email is available",
-    };
+    const exists = await User.exists({ email: email.toLowerCase().trim() });
+    return { success: true, exists };
   } catch (error) {
-    return {
-      success: false,
-      error: "Error checking email availability",
-    };
+    return { success: false, error: "Failed to check email availability" };
   }
-}
-
-export function validatePassword(password) {
-  const minLen = 8;
-  const complexity = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
-  return (
-    typeof password === "string" &&
-    password.length >= minLen &&
-    complexity.test(password)
-  );
 }
 
 export function validatePasswordMatch(password, confirmPassword) {
-  // Check if both passwords are provided
-  if (!password || !confirmPassword) {
+  if (!password || password !== confirmPassword) {
+    return { success: false, error: "Passwords do not match" };
+  }
+  if (password.length < 8) {
     return {
       success: false,
-      error: "Password and confirm password are required",
+      error: "Password must be at least 8 characters long",
+    };
+  }
+  return { success: true };
+}
+
+export async function checkPasswordHistory(newPassword, user) {
+  const recentPasswords = [
+    user.passwordHash,
+    ...(user.passwordHistory || []),
+  ].slice(0, PASSWORD_HISTORY_LIMIT);
+
+  for (const hash of recentPasswords) {
+    if (await bcrypt.compare(newPassword, hash)) {
+      return {
+        success: false,
+        error: "New password cannot be the same as the last 2 passwords",
+      };
+    }
+  }
+  return { success: true };
+}
+
+// ----------------------
+// Security Question Utils
+// ----------------------
+export function validateSecurityQuestionsInput(questionsAnswers) {
+  if (!Array.isArray(questionsAnswers)) {
+    return { success: false, error: "Security questions must be an array" };
+  }
+  if (questionsAnswers.length !== REQUIRED_SECURITY_QUESTIONS) {
+    return {
+      success: false,
+      error: `Exactly ${REQUIRED_SECURITY_QUESTIONS} security questions are required`,
     };
   }
 
-  // Check if passwords are strings
-  if (typeof password !== "string" || typeof confirmPassword !== "string") {
-    return {
-      success: false,
-      error: "Password and confirm password must be strings",
-    };
-  }
-
-  // Check if passwords match
-  if (password !== confirmPassword) {
-    return {
-      success: false,
-      error: "Passwords do not match",
-    };
-  }
-
-  // Check if password meets policy
-  if (!validatePassword(password)) {
-    return {
-      success: false,
-      error: "Password does not meet policy",
-    };
+  const questionIndices = new Set();
+  for (let i = 0; i < questionsAnswers.length; i++) {
+    const qa = questionsAnswers[i];
+    if (
+      typeof qa.questionIndex !== "number" ||
+      qa.questionIndex < 0 ||
+      qa.questionIndex >= SECURITY_QUESTION_POOL.length
+    ) {
+      return {
+        success: false,
+        error: `Invalid question index at position ${i}`,
+      };
+    }
+    if (
+      !qa.answer ||
+      typeof qa.answer !== "string" ||
+      qa.answer.trim().length < MIN_SECURITY_ANSWER_LENGTH
+    ) {
+      return {
+        success: false,
+        error: `Answer at position ${i} must be a string of at least ${MIN_SECURITY_ANSWER_LENGTH} characters`,
+      };
+    }
+    if (questionIndices.has(qa.questionIndex)) {
+      return {
+        success: false,
+        error: "Duplicate security questions are not allowed",
+      };
+    }
+    questionIndices.add(qa.questionIndex);
   }
 
   return { success: true };
 }
 
-export async function handleLogin(user, password, req) {
-  const now = new Date();
+export async function hashSecurityAnswers(questionsAnswers) {
+  try {
+    const hashedQuestions = await Promise.all(
+      questionsAnswers.map(async (qa) => ({
+        question: SECURITY_QUESTION_POOL[qa.questionIndex],
+        questionIndex: qa.questionIndex,
+        answerHash: await bcrypt.hash(qa.answer.trim().toLowerCase(), 10),
+      }))
+    );
+    return { success: true, securityQuestions: hashedQuestions };
+  } catch (error) {
+    return { success: false, error: "Failed to hash security answers" };
+  }
+}
 
-  // Check lockout
-  if (user.lockUntil && user.lockUntil > now) {
-    const secondsRemaining = Math.ceil((user.lockUntil - now) / 1000);
+export async function validateSecurityAnswers(user, answers) {
+  if (!user.securityQuestions || user.securityQuestions.length === 0) {
+    return { success: false, error: "No security questions configured" };
+  }
+  if (
+    !Array.isArray(answers) ||
+    answers.length !== user.securityQuestions.length
+  ) {
     return {
       success: false,
-      attemptsRemaining: 0,
-      lockout: { until: user.lockUntil.toISOString(), secondsRemaining },
+      error: `Expected ${user.securityQuestions.length} answers`,
     };
   }
 
-  const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+  for (let i = 0; i < user.securityQuestions.length; i++) {
+    const isCorrect = await bcrypt.compare(
+      (answers[i] || "").trim().toLowerCase(),
+      user.securityQuestions[i].answerHash
+    );
+    if (!isCorrect) {
+      return {
+        success: false,
+        error: "Incorrect security answer",
+        questionIndex: i,
+      };
+    }
+  }
+  return { success: true };
+}
 
-  if (!passwordMatch) {
-    // Increment failed login
-    user.failedLoginCount = (user.failedLoginCount || 0) + 1;
+// ----------------------
+// Registration Helper
+// ----------------------
+export async function validateRegistrationSecurityQuestions(questionsAnswers) {
+  const validation = validateSecurityQuestionsInput(questionsAnswers);
+  if (!validation.success) return validation;
+
+  const hashResult = await hashSecurityAnswers(questionsAnswers);
+  if (!hashResult.success) return hashResult;
+
+  return { success: true, securityQuestions: hashResult.securityQuestions };
+}
+
+// ----------------------
+// Auth Functions
+// ----------------------
+export async function handleLogin(user, password, req) {
+  const now = new Date();
+
+  // Check if account is currently locked
+  if (user.lockUntil && user.lockUntil > now) {
+    const remaining = Math.ceil((user.lockUntil - now) / 1000); // seconds remaining
+    return {
+      success: false,
+      error: `Account is temporarily locked. Try again in ${remaining} seconds.`,
+      attemptsRemaining: 0,
+    };
+  }
+
+  const validPassword = await bcrypt.compare(password, user.passwordHash);
+
+  if (!validPassword) {
+    // Increment failed attempts
+    user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
     user.lastFailedLoginAt = now;
 
-    let locked = false;
-    if (user.failedLoginCount >= MAX_ATTEMPTS) {
-      user.lockUntil = new Date(Date.now() + LOCK_TIME);
-      user.failedLoginCount = 0;
-      locked = true;
+    // Lock account if max attempts reached
+    if (user.failedLoginAttempts >= MAX_ATTEMPTS) {
+      user.lockUntil = new Date(now.getTime() + LOCK_TIME);
+      user.failedLoginAttempts = 0; // reset after locking
     }
 
     await user.save();
 
-    const attemptsRemaining = locked
-      ? 0
-      : Math.max(0, MAX_ATTEMPTS - user.failedLoginCount);
-    const response = { success: false, attemptsRemaining };
-    if (user.lockUntil && user.lockUntil > now) {
-      response.lockout = {
-        until: user.lockUntil.toISOString(),
-        secondsRemaining: Math.ceil((user.lockUntil - now) / 1000),
-      };
-    }
-    return response;
+    return {
+      success: false,
+      attemptsRemaining: Math.max(0, MAX_ATTEMPTS - user.failedLoginAttempts),
+    };
   }
 
-  // Successful login: reset counters
-  const prevLastLoginAt = user.lastLoginAt;
-  const prevLastFailedLoginAt = user.lastFailedLoginAt;
-  user.failedLoginCount = 0;
+  // Reset failed attempts and lock info on successful login
+  user.failedLoginAttempts = 0;
   user.lockUntil = null;
   user.lastLoginAt = now;
   await user.save();
 
   // Generate tokens
   const accessToken = jwt.sign(
-    { sub: String(user._id), role: user.role },
-    process.env.ACCESS_SECRET,
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
     { expiresIn: "15m" }
   );
-
   const refreshToken = jwt.sign(
-    { sub: String(user._id) },
-    process.env.REFRESH_SECRET,
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: "7d" }
   );
 
-  const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-  const exp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
   await Session.create({
     userId: user._id,
-    refreshTokenHash,
-    issuedAt: now,
-    expiresAt: exp,
+    refreshToken,
     ip: req.ip,
     userAgent: req.headers["user-agent"],
   });
@@ -201,232 +248,121 @@ export async function handleLogin(user, password, req) {
       lastName: user.lastName,
       role: user.role,
     },
-    lastLoginAt: prevLastLoginAt,
-    lastFailedLoginAt: prevLastFailedLoginAt,
+    lastLoginAt: user.lastLoginAt,
+    lastFailedLoginAt: user.lastFailedLoginAt,
   };
 }
 
 export async function refreshTokens(oldRefreshToken, req) {
   try {
-    // Verify refresh token signature
-    const payload = jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET);
-
-    const session = await Session.findOne({ userId: payload.sub }).sort({
-      issuedAt: -1,
+    const payload = jwt.verify(oldRefreshToken, process.env.JWT_REFRESH_SECRET);
+    const session = await Session.findOne({
+      userId: payload.id,
+      refreshToken: oldRefreshToken,
+      revokedAt: null,
     });
+    if (!session) return { success: false, error: "Invalid refresh token" };
 
-    if (!session) return { success: false, error: "Invalid session" };
-
-    // Verify hashed refresh token
-    const validToken = await bcrypt.compare(
-      oldRefreshToken,
-      session.refreshTokenHash
+    const accessToken = jwt.sign(
+      { id: payload.id, role: session.userRole },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
     );
-    if (!validToken) return { success: false, error: "Invalid token" };
-
-    const userId = payload.sub;
-
-    // Generate new tokens
-    const accessToken = jwt.sign({ sub: userId }, process.env.ACCESS_SECRET, {
-      expiresIn: "15m",
-    });
     const newRefreshToken = jwt.sign(
-      { sub: userId },
-      process.env.REFRESH_SECRET,
+      { id: payload.id },
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" }
     );
-    const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, 10);
 
-    // Save new session
-    const now = new Date();
-    const exp = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    await Session.create({
-      userId,
-      refreshTokenHash: newRefreshTokenHash,
-      issuedAt: now,
-      expiresAt: exp,
-      ip: req.ip,
-      userAgent: req.headers["user-agent"],
-    });
-
-    // Optionally, delete old refresh token or keep a history
-    await Session.deleteOne({ userId: payload.sub, refreshTokenHash: hash });
+    session.refreshToken = newRefreshToken;
+    await session.save();
 
     return {
       success: true,
       accessToken,
       refreshToken: newRefreshToken,
-      userId,
+      userId: payload.id,
     };
-  } catch (err) {
-    return { success: false, error: "Invalid token" };
+  } catch {
+    return { success: false, error: "Refresh token invalid or expired" };
   }
 }
 
 export async function logout(refreshToken) {
-  if (!refreshToken) return { success: false, error: "No token provided" };
-
   try {
-    // Decode refresh token to get userId
-    const payload = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-
-    // Delete the session associated with this token
-    await Session.deleteOne({ userId: payload.sub });
-
+    const session = await Session.findOne({ refreshToken, revokedAt: null });
+    if (!session) return { success: false, error: "Invalid session" };
+    session.revokedAt = new Date();
+    await session.save();
     return { success: true };
-  } catch (err) {
-    return { success: false, error: "Invalid token" };
+  } catch {
+    return { success: false, error: "Logout failed" };
   }
 }
 
+// ----------------------
+// Change Password
+// ----------------------
 export async function changePassword(
   user,
   currentPassword,
   newPassword,
+  securityAnswers,
   req,
   forceLogoutAllSessions = false
 ) {
   const now = new Date();
 
-  // Check current password
-  const ok = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!ok) return { success: false, error: "Current password is incorrect" };
-
-  // Enforce min password age
-  if (
-    user.passwordChangedAt &&
-    now - user.passwordChangedAt < MIN_PASSWORD_AGE
-  ) {
-    const nextChangeTime = new Date(
-      user.passwordChangedAt.getTime() + MIN_PASSWORD_AGE
-    );
-    const secondsRemaining = Math.ceil((nextChangeTime - now) / 1000);
-
-    await auditAuth(
-      "PASSWORD_CHANGE_FAILURE",
-      String(user._id),
-      user.role,
-      String(user._id),
-      { reason: "min-age", secondsRemaining },
-      req
-    ).catch(() => {});
-
-    return {
-      success: false,
-      error: "password recently changed",
-      nextChangeTime,
-      secondsRemaining,
-    };
-  }
-
-  // Prevent reuse from history
-  const allHashes = [user.passwordHash, ...(user.passwordHistory || [])];
-  for (const h of allHashes) {
-    if (await bcrypt.compare(newPassword, h)) {
-      await auditAuth(
-        "PASSWORD_CHANGE_FAILURE",
-        String(user._id),
-        user.role,
-        String(user._id),
-        { reason: "reuse" },
-        req
-      ).catch(() => {});
+  // Step 0: Check minimum password age
+  if (user.passwordChangedAt) {
+    if (now - user.passwordChangedAt < MIN_PASSWORD_AGE) {
       return {
         success: false,
-        error: "New password cannot be the same as a previous password.",
+        error: "Password must be at least 1 day old before it can be changed",
       };
     }
   }
 
-  // Rotate history (cap 2)
+  // Step 1: Validate current password
+  const validCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!validCurrent)
+    return { success: false, error: "Current password is incorrect" };
+
+  // Step 2: Validate security answers (non-admin)
+  if (user.role !== "ADMIN") {
+    const secAnsValid = await validateSecurityAnswers(user, securityAnswers);
+    if (!secAnsValid.success)
+      return { success: false, error: secAnsValid.error };
+  }
+
+  // Step 3: Check password history
+  const historyCheck = await checkPasswordHistory(newPassword, user);
+  if (!historyCheck.success)
+    return { success: false, error: historyCheck.error };
+
+  // Step 4: Update password
+  const passwordHash = await bcrypt.hash(newPassword, 10);
   user.passwordHistory = [
     user.passwordHash,
     ...(user.passwordHistory || []),
   ].slice(0, PASSWORD_HISTORY_LIMIT);
-
-  // Update password
-  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  user.passwordHash = passwordHash;
   user.passwordChangedAt = now;
   await user.save();
 
-  // Force logout all sessions
+  // Step 5: Revoke sessions if requested
   if (forceLogoutAllSessions) {
-    const sessions = await Session.find({ userId: user._id, revokedAt: null });
-    const nowTs = new Date();
-    for (const s of sessions) {
-      s.revokedAt = nowTs;
-      await s.save();
-    }
-  }
-
-  await auditAuth(
-    "PASSWORD_CHANGE_SUCCESS",
-    String(user._id),
-    user.role,
-    String(user._id),
-    {},
-    req
-  ).catch(() => {});
-
-  return { success: true };
-}
-
-export async function validateSecurityAnswers(user, answers) {
-  // Check if user has security questions
-  if (!user.securityQuestions || user.securityQuestions.length === 0) {
-    return { success: false, error: "No security questions configured" };
-  }
-
-  // Check if answers array matches questions count
-  if (
-    !Array.isArray(answers) ||
-    answers.length !== user.securityQuestions.length
-  ) {
-    return {
-      success: false,
-      error: `Expected ${user.securityQuestions.length} answers`,
-    };
-  }
-
-  // Verify each answer
-  for (let i = 0; i < user.securityQuestions.length; i++) {
-    const question = user.securityQuestions[i];
-    const providedAnswer = (answers[i] || "").trim().toLowerCase();
-
-    const isCorrect = await bcrypt.compare(providedAnswer, question.answerHash);
-    if (!isCorrect) {
-      return {
-        success: false,
-        error: "Incorrect security answer",
-        questionIndex: i,
-      };
-    }
+    await Session.updateMany(
+      { userId: user._id, revokedAt: null },
+      { revokedAt: now }
+    );
   }
 
   return { success: true };
 }
-
-export async function checkPasswordHistory(newPassword, user) {
-  // Check against last PASSWORD_HISTORY_LIMIT passwords (current + 1 previous)
-  const recentPasswords = [
-    user.passwordHash,
-    ...(user.passwordHistory || []),
-  ].slice(0, PASSWORD_HISTORY_LIMIT);
-
-  for (const hash of recentPasswords) {
-    const isMatch = await bcrypt.compare(newPassword, hash);
-    if (isMatch) {
-      return {
-        success: false,
-        error:
-          "New password cannot be the same as one of your last 2 passwords",
-      };
-    }
-  }
-
-  return { success: true };
-}
-
+// ----------------------
+// Forgot Password Policy Validation
+// ----------------------
 export async function validateForgotPasswordPolicy(
   user,
   newPassword,
@@ -434,220 +370,48 @@ export async function validateForgotPasswordPolicy(
   securityAnswers,
   req
 ) {
-  // Step 1: Validate password format and match
-  const passwordValidation = validatePasswordMatch(
-    newPassword,
-    confirmPassword
-  );
-  if (!passwordValidation.success) {
+  const passCheck = validatePasswordMatch(newPassword, confirmPassword);
+  if (!passCheck.success)
     return {
       success: false,
-      error: passwordValidation.error,
+      error: passCheck.error,
       step: "password_validation",
     };
-  }
 
-  // Step 2: Validate security answers
-  const answersValidation = await validateSecurityAnswers(
-    user,
-    securityAnswers
-  );
-  if (!answersValidation.success) {
-    await auditAuth(
-      "FORGOT_PASSWORD_SECURITY_ANSWER_FAILURE",
-      String(user._id),
-      user.role,
-      String(user._id),
-      { questionIndex: answersValidation.questionIndex },
-      req
-    ).catch(() => {});
-
+  const secAnsCheck = await validateSecurityAnswers(user, securityAnswers);
+  if (!secAnsCheck.success)
     return {
       success: false,
-      error: answersValidation.error,
+      error: secAnsCheck.error,
       step: "security_answers",
     };
-  }
 
-  // Step 3: Check password history (last PASSWORD_HISTORY_LIMIT passwords)
-  const historyValidation = await checkPasswordHistory(newPassword, user);
-  if (!historyValidation.success) {
-    await auditAuth(
-      "FORGOT_PASSWORD_HISTORY_CHECK_FAILURE",
-      String(user._id),
-      user.role,
-      String(user._id),
-      { reason: "password_reuse" },
-      req
-    ).catch(() => {});
-
+  const historyCheck = await checkPasswordHistory(newPassword, user);
+  if (!historyCheck.success)
     return {
       success: false,
-      error: historyValidation.error,
+      error: historyCheck.error,
       step: "password_history",
     };
-  }
-
-  // All validations passed
-  await auditAuth(
-    "FORGOT_PASSWORD_POLICY_VALIDATED",
-    String(user._id),
-    user.role,
-    String(user._id),
-    {},
-    req
-  ).catch(() => {});
 
   return { success: true, step: "all_validations_passed" };
 }
 
-export function getSecurityQuestionPool() {
-  return SECURITY_QUESTION_POOL;
-}
-
-export function validateSecurityQuestionsInput(questionsAnswers) {
-  // Check if input is provided
-  if (!questionsAnswers) {
-    return {
-      success: false,
-      error: "Security questions and answers are required",
-    };
-  }
-
-  // Check if it's an array
-  if (!Array.isArray(questionsAnswers)) {
-    return {
-      success: false,
-      error: "Security questions must be an array",
-    };
-  }
-
-  // Check if exactly 3 questions are provided
-  if (questionsAnswers.length !== REQUIRED_SECURITY_QUESTIONS) {
-    return {
-      success: false,
-      error: `Exactly ${REQUIRED_SECURITY_QUESTIONS} security questions are required`,
-    };
-  }
-
-  // Validate each question-answer pair
-  for (let i = 0; i < questionsAnswers.length; i++) {
-    const qa = questionsAnswers[i];
-
-    // Check if question index is valid
-    if (
-      typeof qa.questionIndex !== "number" ||
-      qa.questionIndex < 0 ||
-      qa.questionIndex >= SECURITY_QUESTION_POOL.length
-    ) {
-      return {
-        success: false,
-        error: `Invalid question index at position ${i}`,
-      };
-    }
-
-    // Check if answer is provided
-    if (!qa.answer || typeof qa.answer !== "string") {
-      return {
-        success: false,
-        error: `Answer at position ${i} is required and must be a string`,
-      };
-    }
-
-    // Check answer length (minimum 3 characters)
-    const trimmedAnswer = qa.answer.trim();
-    if (trimmedAnswer.length < MIN_SECURITY_ANSWER_LENGTH) {
-      return {
-        success: false,
-        error: `Answer at position ${i} must be at least ${MIN_SECURITY_ANSWER_LENGTH} characters`,
-      };
-    }
-
-    // Check for duplicate questions
-    const questionIndices = questionsAnswers.map((q) => q.questionIndex);
-    if (new Set(questionIndices).size !== questionIndices.length) {
-      return {
-        success: false,
-        error: "Duplicate security questions are not allowed",
-      };
-    }
-  }
-
-  return { success: true };
-}
-
-export async function hashSecurityAnswers(questionsAnswers) {
-  try {
-    const hashedQuestions = await Promise.all(
-      questionsAnswers.map(async (qa) => ({
-        question: SECURITY_QUESTION_POOL[qa.questionIndex],
-        questionIndex: qa.questionIndex,
-        answerHash: await bcrypt.hash(qa.answer.trim().toLowerCase(), 10),
-      }))
-    );
-
-    return {
-      success: true,
-      securityQuestions: hashedQuestions,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: "Failed to hash security answers",
-    };
-  }
-}
-
-export async function validateRegistrationSecurityQuestions(questionsAnswers) {
-  // Step 1: Validate input format
-  const inputValidation = validateSecurityQuestionsInput(questionsAnswers);
-  if (!inputValidation.success) {
-    return inputValidation;
-  }
-
-  // Step 2: Hash the answers
-  const hashResult = await hashSecurityAnswers(questionsAnswers);
-  if (!hashResult.success) {
-    return hashResult;
-  }
-
-  return {
-    success: true,
-    securityQuestions: hashResult.securityQuestions,
-  };
-}
+// ----------------------
+// Admin Reset User
+// ----------------------
 export async function adminResetUser(adminUser, targetUserId, updates, req) {
-  const { newPassword, confirmPassword, newSecurityQuestionsAnswers } = updates;
-
-  // ----------------------------------------
-  // Step 1: Verify admin
-  // ----------------------------------------
-  if (adminUser.role !== "ADMIN") {
+  if (adminUser.role !== "ADMIN")
     return { success: false, error: "Only admins can perform this action" };
-  }
 
-  // ----------------------------------------
-  // Step 2: Find target user
-  // ----------------------------------------
   const targetUser = await User.findById(targetUserId);
-  if (!targetUser) {
-    return { success: false, error: "User not found" };
-  }
+  if (!targetUser) return { success: false, error: "User not found" };
+  if (targetUser.role === "ADMIN")
+    return { success: false, error: "Cannot reset another admin's account" };
 
-  // Prevent admin reset for another admin
-  if (targetUser.role === "ADMIN") {
-    return {
-      success: false,
-      error: "Cannot reset another admin's account",
-    };
-  }
-
-  // Track actions for logging response
+  const { newPassword, confirmPassword, newSecurityQuestionsAnswers } = updates;
   const actionsPerformed = [];
 
-  // ----------------------------------------
-  // Step 3: Reset Password (if provided)
-  // ----------------------------------------
   if (newPassword || confirmPassword) {
     const validation = validatePasswordMatch(newPassword, confirmPassword);
     if (!validation.success) return validation;
@@ -658,58 +422,30 @@ export async function adminResetUser(adminUser, targetUserId, updates, req) {
     );
     if (!historyValidation.success) return historyValidation;
 
-    const now = new Date();
     const passwordHash = await bcrypt.hash(newPassword, 10);
-
+    const now = new Date();
     targetUser.passwordHistory = [
       targetUser.passwordHash,
       ...(targetUser.passwordHistory || []),
     ].slice(0, PASSWORD_HISTORY_LIMIT);
-
     targetUser.passwordHash = passwordHash;
     targetUser.passwordChangedAt = now;
 
-    // Revoke all user sessions
-    const sessions = await Session.find({
-      userId: targetUser._id,
-      revokedAt: null,
-    });
-    for (const s of sessions) {
-      s.revokedAt = now;
-      await s.save();
-    }
-
+    await Session.updateMany(
+      { userId: targetUser._id, revokedAt: null },
+      { revokedAt: now }
+    );
     actionsPerformed.push("password");
   }
 
-  // ----------------------------------------
-  // Step 4: Reset Security Questions (if provided)
-  // ----------------------------------------
   if (newSecurityQuestionsAnswers) {
-    const val = await validateRegistrationSecurityQuestions(
-      newSecurityQuestionsAnswers
-    );
+    const val = await hashSecurityAnswers(newSecurityQuestionsAnswers);
     if (!val.success) return val;
-
     targetUser.securityQuestions = val.securityQuestions;
     actionsPerformed.push("security_questions");
   }
 
-  // ----------------------------------------
-  // Step 5: Save updates
-  // ----------------------------------------
   await targetUser.save();
-
-  // Audit log
-  await auditAuth(
-    "ADMIN_USER_RESET_SUCCESS",
-    String(adminUser._id),
-    adminUser.role,
-    String(targetUser._id),
-    { actionsPerformed, email: targetUser.email },
-    req
-  ).catch(() => {});
-
   return {
     success: true,
     message: "User updated successfully",

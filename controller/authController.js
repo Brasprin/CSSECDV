@@ -1,385 +1,240 @@
-import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import {
   validateEmail,
+  checkEmailExists,
   validatePasswordMatch,
   handleLogin,
   refreshTokens,
   logout,
   changePassword,
   validateForgotPasswordPolicy,
-  getSecurityQuestionPool,
   validateRegistrationSecurityQuestions,
-  checkEmailExists,
   adminResetUser,
-} from "../helpers/auth.js";
+} from "../helpers/authHelpers.js";
 
-const Session = require("../models/Session.js").default;
-
-export async function checkEmailAvailability(req, res) {
-  const { email } = req.body || {};
-
-  if (!email || typeof email !== "string") {
-    return res.status(400).json({ error: "Email is required" });
-  }
-
-  const result = await checkEmailExists(email);
-
-  if (!result.success) {
-    const statusCode = result.exists ? 409 : 400;
-    return res.status(statusCode).json({
-      success: false,
-      exists: result.exists || false,
-      error: result.error,
-    });
-  }
-
-  res.json({
-    success: true,
-    exists: false,
-    message: result.message,
-  });
-}
-
-// Register function
+// ----------------------
+// REGISTER
+// ----------------------
 export async function register(req, res) {
-  const {
-    email,
-    password,
-    confirmPassword,
-    firstName,
-    lastName,
-    securityQuestionsAnswers,
-  } = req.body || {};
-
-  // Normalize inputs
-  const normalizedEmail = (email || "").toLowerCase().trim();
-  const trimmedFirstName = (firstName || "").trim();
-  const trimmedLastName = (lastName || "").trim();
-
-  // Validate email format
-  if (!validateEmail(normalizedEmail)) {
-    return res
-      .status(400)
-      .json({ field: "email", message: "Invalid email format" });
-  }
-
-  // Check if email already exists
-  const emailCheckResult = await checkEmailExists(normalizedEmail);
-  if (!emailCheckResult.success) {
-    return res
-      .status(409)
-      .json({ field: "email", message: emailCheckResult.error });
-  }
-
-  // Validate password and confirm password match
-  const passwordValidation = validatePasswordMatch(password, confirmPassword);
-  if (!passwordValidation.success) {
-    return res
-      .status(400)
-      .json({ field: "password", message: passwordValidation.error });
-  }
-
-  // Validate first name
-  if (!trimmedFirstName || trimmedFirstName.length < 2) {
-    return res.status(400).json({
-      field: "firstName",
-      message: "First name must be at least 2 characters",
-    });
-  }
-
-  // Validate last name
-  if (!trimmedLastName || trimmedLastName.length < 2) {
-    return res.status(400).json({
-      field: "lastName",
-      message: "Last name must be at least 2 characters",
-    });
-  }
-
-  // Validate and hash security questions
-  const securityQuestionsValidation =
-    await validateRegistrationSecurityQuestions(securityQuestionsAnswers);
-  if (!securityQuestionsValidation.success) {
-    return res.status(400).json({
-      field: "securityQuestions",
-      message: securityQuestionsValidation.error,
-    });
-  }
-
   try {
-    const passwordHash = await bcrypt.hash(password, 10);
+    const {
+      email,
+      firstName,
+      lastName,
+      password,
+      confirmPassword,
+      securityQuestions,
+    } = req.body;
 
-    const user = await User.create({
-      email: normalizedEmail,
-      firstName: trimmedFirstName,
-      lastName: trimmedLastName,
-      passwordHash,
-      securityQuestions: securityQuestionsValidation.securityQuestions,
-      role: "STUDENT",
-    });
+    // Email validation
+    if (!validateEmail(email))
+      return res.status(400).json({ success: false, error: "Invalid email" });
 
-    res.status(201).json({
-      id: user._id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    });
-  } catch (e) {
-    if (e.code === 11000)
+    // Check if email exists
+    const emailCheck = await checkEmailExists(email);
+    if (!emailCheck.success || emailCheck.exists)
       return res
-        .status(409)
-        .json({ field: "email", message: "Email already registered" });
-    res.status(500).json({ message: "Registration failed" });
-  }
-}
+        .status(400)
+        .json({ success: false, error: "Email already registered" });
 
-export async function login(req, res) {
-  const { email, password } = req.body || {};
-  if (typeof email !== "string" || typeof password !== "string") {
-    return res.status(400).json({ error: "Invalid input" });
-  }
+    // Password validation
+    const passwordValidation = validatePasswordMatch(password, confirmPassword);
+    if (!passwordValidation.success)
+      return res
+        .status(400)
+        .json({ success: false, error: passwordValidation.error });
 
-  const normalizedEmail = email.toLowerCase().trim();
-  const user = await User.findOne({ email: normalizedEmail });
+    // Security questions validation and hashing
+    const secQValidation = await validateRegistrationSecurityQuestions(
+      securityQuestions
+    );
+    if (!secQValidation.success)
+      return res
+        .status(400)
+        .json({ success: false, error: secQValidation.error });
 
-  // Generic invalid response
-  if (!user) return res.status(401).json({ error: "invalid credentials" });
-
-  const result = await handleLogin(user, password, req);
-
-  if (!result.success) {
-    return res.status(401).json({
-      error: "invalid credentials",
-      ...("attemptsRemaining" in result && {
-        attemptsRemaining: result.attemptsRemaining,
-      }),
-      ...("lockout" in result && { lockout: result.lockout }),
+    // Create user
+    const newUser = new User({
+      email: email.toLowerCase().trim(),
+      firstName,
+      lastName,
+      passwordHash: await bcrypt.hash(password, 10),
+      securityQuestions: secQValidation.securityQuestions,
     });
-  }
 
-  // Set refresh token cookie
-  res.cookie("refresh_token", result.refreshToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  res.json({
-    accessToken: result.accessToken,
-    user: result.user,
-    lastLoginAt: result.lastLoginAt,
-    lastFailedLoginAt: result.lastFailedLoginAt,
-  });
-}
-
-export async function refresh(req, res) {
-  const oldRefreshToken = req.cookies.refresh_token;
-  if (!oldRefreshToken)
-    return res.status(401).json({ error: "No refresh token provided" });
-
-  const result = await refreshTokens(oldRefreshToken, req);
-
-  if (!result.success) return res.status(401).json({ error: result.error });
-
-  // Set new refresh token cookie
-  res.cookie("refresh_token", result.refreshToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  res.json({
-    accessToken: result.accessToken,
-    userId: result.userId,
-  });
-}
-
-export async function logoutController(req, res) {
-  const refreshToken = req.cookies.refresh_token;
-  const result = await logout(refreshToken);
-
-  // Clear cookie
-  res.clearCookie("refresh_token", { path: "/" });
-
-  if (!result.success) return res.status(400).json({ error: result.error });
-
-  res.json({ message: "Logged out successfully" });
-}
-
-export async function changePasswordController(req, res) {
-  const {
-    currentPassword,
-    newPassword,
-    confirmPassword,
-    forceLogoutAllSessions,
-  } = req.body;
-  const user = req.user; // assume requireAuth middleware sets req.user
-
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: "Current and new password required" });
-  }
-
-  // Validate new password and confirm password match
-  const passwordValidation = validatePasswordMatch(
-    newPassword,
-    confirmPassword
-  );
-  if (!passwordValidation.success) {
-    return res.status(400).json({ error: passwordValidation.error });
-  }
-
-  const result = await changePassword(
-    user,
-    currentPassword,
-    newPassword,
-    req,
-    forceLogoutAllSessions
-  );
-
-  if (!result.success) {
-    return res.status(409).json(result);
-  }
-
-  res.json({ message: "Password changed successfully" });
-}
-
-export async function getSecurityQuestions(req, res) {
-  try {
-    const questions = getSecurityQuestionPool();
-    res.json({
-      success: true,
-      questions: questions.map((q, index) => ({
-        index,
-        question: q,
-      })),
-      required: REQUIRED_SECURITY_QUESTIONS, // use the constant here
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve security questions" });
-  }
-}
-
-export async function forgotPasswordReset(req, res) {
-  const { email, newPassword, confirmPassword, securityAnswers } =
-    req.body || {};
-
-  // Validate inputs
-  if (!email || typeof email !== "string") {
-    return res.status(400).json({ error: "Email is required" });
-  }
-
-  if (!newPassword || !confirmPassword) {
+    await newUser.save();
     return res
-      .status(400)
-      .json({ error: "New password and confirm password are required" });
+      .status(201)
+      .json({ success: true, message: "User registered successfully" });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Registration failed" });
   }
+}
 
-  if (!Array.isArray(securityAnswers) || securityAnswers.length === 0) {
-    return res.status(400).json({ error: "Security answers are required" });
-  }
-
+// ----------------------
+// LOGIN
+// ----------------------
+export async function login(req, res) {
   try {
-    // Find user by email
+    const { email, password } = req.body;
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) {
-      // Generic response for security (don't reveal if email exists)
-      return res.status(200).json({
-        success: true,
-        message:
-          "If email exists and all validations pass, password will be reset",
-      });
-    }
+    if (!user)
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid email or password" });
 
-    // Apply forgot password policy validation (includes security question validation)
-    const policyResult = await validateForgotPasswordPolicy(
+    const result = await handleLogin(user, password, req);
+    if (!result.success)
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid email or password" });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: "Login failed" });
+  }
+}
+
+// ----------------------
+// REFRESH TOKEN
+// ----------------------
+export async function refreshTokenController(req, res) {
+  try {
+    const { refreshToken } = req.body;
+    const result = await refreshTokens(refreshToken, req);
+    if (!result.success)
+      return res.status(401).json({ success: false, error: result.error });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Token refresh failed" });
+  }
+}
+
+// ----------------------
+// LOGOUT
+// ----------------------
+export async function logoutController(req, res) {
+  try {
+    const { refreshToken } = req.body;
+    const result = await logout(refreshToken);
+    if (!result.success)
+      return res.status(400).json({ success: false, error: result.error });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, error: "Logout failed" });
+  }
+}
+
+// ----------------------
+// CHANGE PASSWORD
+// ----------------------
+export async function changePasswordController(req, res) {
+  try {
+    const {
+      currentPassword,
+      newPassword,
+      confirmPassword,
+      securityAnswers,
+      forceLogoutAllSessions,
+    } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user)
+      return res.status(404).json({ success: false, error: "User not found" });
+
+    const result = await changePassword(
+      user,
+      currentPassword,
+      newPassword,
+      securityAnswers,
+      req,
+      forceLogoutAllSessions
+    );
+    if (!result.success)
+      return res.status(400).json({ success: false, error: result.error });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Password change failed" });
+  }
+}
+
+// ----------------------
+// FORGOT PASSWORD
+// ----------------------
+export async function forgotPasswordController(req, res) {
+  try {
+    const { email, newPassword, confirmPassword, securityAnswers } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user)
+      return res.status(404).json({ success: false, error: "User not found" });
+
+    const result = await validateForgotPasswordPolicy(
       user,
       newPassword,
       confirmPassword,
       securityAnswers,
       req
     );
+    if (!result.success)
+      return res
+        .status(400)
+        .json({ success: false, error: result.error, step: result.step });
 
-    if (!policyResult.success) {
-      // Return appropriate status based on validation step
-      let statusCode = 400;
-      if (policyResult.step === "security_answers") {
-        statusCode = 401;
-      } else if (policyResult.step === "password_history") {
-        statusCode = 409;
-      }
+    // Update password after validation, FORCE change to skip current password check
+    await changePassword(
+      user,
+      null, // currentPassword is ignored when forceChange=true
+      newPassword,
+      securityAnswers,
+      req,
+      true, // forceLogoutAllSessions
+      true // forceChange
+    );
 
-      return res.status(statusCode).json({
-        success: false,
-        error: policyResult.error,
-        step: policyResult.step,
-      });
-    }
-
-    // All validations passed - update password
-    const now = new Date();
-    const passwordHash = await bcrypt.hash(newPassword, 10);
-
-    // Rotate password history (keep last 2)
-    user.passwordHistory = [
-      user.passwordHash,
-      ...(user.passwordHistory || []),
-    ].slice(0, 2);
-
-    // Update password
-    user.passwordHash = passwordHash;
-    user.passwordChangedAt = now;
-    await user.save();
-
-    // Revoke all sessions (user must login again)
-    const sessions = await Session.find({ userId: user._id, revokedAt: null });
-    const nowTs = new Date();
-    for (const s of sessions) {
-      s.revokedAt = nowTs;
-      await s.save();
-    }
-
-    return res.json({
-      success: true,
-      message:
-        "Password reset successfully. Please login with your new password.",
-    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully" });
   } catch (error) {
-    console.error("Forgot password reset error:", error);
-    return res.status(500).json({ error: "Password reset failed" });
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Forgot password failed" });
   }
 }
 
-// Admin Functions
+// ----------------------
+// ADMIN RESET USER
+// ----------------------
 export async function adminResetUserController(req, res) {
   try {
-    const adminUser = req.user;
-    const {
-      targetUserId,
-      newPassword,
-      confirmPassword,
-      newSecurityQuestionsAnswers,
-    } = req.body;
+    const { targetUserId, updates } = req.body;
+    const adminUser = req.user; // assume req.user is already populated by auth middleware
+    const result = await adminResetUser(adminUser, targetUserId, updates, req);
 
-    const result = await adminResetUser(
-      adminUser,
-      targetUserId,
-      {
-        newPassword,
-        confirmPassword,
-        newSecurityQuestionsAnswers,
-      },
-      req
-    );
-
-    if (!result.success) return res.status(400).json(result);
-
-    return res.json(result);
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-    });
+    if (!result.success)
+      return res.status(400).json({ success: false, error: result.error });
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Admin reset failed" });
   }
 }

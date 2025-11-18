@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: { type: Date, default: null },
   passwordHistory: [{ type: String }],
 
-  failedLoginCount: { type: Number, default: 0 },
+  failedLoginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date, default: null },
 
   lastLoginAt: { type: Date, default: null },
