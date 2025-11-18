@@ -4,7 +4,7 @@ import {
   getAllUsersController,
   getCourseStudentsController,
 } from "../controllers/userController.js";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { authenticateJWT, requireRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -13,7 +13,8 @@ const router = express.Router();
 // ----------------------
 router.get(
   "/all",
-  authMiddleware(["ADMIN"]), // Only admin can access
+  authenticateJWT,
+  requireRole("ADMIN"),
   getAllUsersController
 );
 
@@ -22,7 +23,8 @@ router.get(
 // ----------------------
 router.get(
   "/course/:courseId/students",
-  authMiddleware(["TEACHER"]), // Only teacher can access
+  authenticateJWT,
+  requireRole("TEACHER"),
   getCourseStudentsController
 );
 

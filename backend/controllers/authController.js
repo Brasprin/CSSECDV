@@ -12,7 +12,7 @@ import {
   adminResetUser,
 } from "../helpers/authHelpers.js";
 
-import { auditHelper } from "../helpers/auditHelper.js";
+import { auditHelper } from "../helpers/auditHelpers.js";
 
 // ----------------------
 // REGISTER

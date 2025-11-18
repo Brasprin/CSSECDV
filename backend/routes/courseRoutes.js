@@ -2,7 +2,7 @@ import express from "express";
 import {
   createCourseController,
   getTeacherCoursesController,
-  getCourseController,
+  getCourseByIdController,
   updateCourseController,
   deleteCourseController,
   enrollStudentController,
@@ -12,7 +12,7 @@ import {
   getStudentGradesController,
 } from "../controllers/courseController.js";
 
-import { requireAuth } from "../middleware/authMiddleware.js";
+import { authenticateJWT } from "../middleware/authMiddleware.js";
 import { requireTeacher } from "../middleware/requireTeacher.js";
 import { requireStudent } from "../middleware/requireStudent.js";
 
@@ -21,18 +21,28 @@ const router = express.Router();
 // ----------------------
 // TEACHER COURSE MANAGEMENT (Protected)
 // ----------------------
-router.post("/", requireAuth, requireTeacher, createCourseController);
+router.post("/", authenticateJWT, requireTeacher, createCourseController);
 router.get(
   "/teacher",
-  requireAuth,
+  authenticateJWT,
   requireTeacher,
   getTeacherCoursesController
 );
-router.get("/:courseId", requireAuth, requireTeacher, getCourseController);
-router.put("/:courseId", requireAuth, requireTeacher, updateCourseController);
+router.get(
+  "/:courseId",
+  authenticateJWT,
+  requireTeacher,
+  getCourseByIdController
+);
+router.put(
+  "/:courseId",
+  authenticateJWT,
+  requireTeacher,
+  updateCourseController
+);
 router.delete(
   "/:courseId",
-  requireAuth,
+  authenticateJWT,
   requireTeacher,
   deleteCourseController
 );
@@ -42,13 +52,13 @@ router.delete(
 // ----------------------
 router.post(
   "/:courseId/enroll",
-  requireAuth,
+  authenticateJWT,
   requireStudent,
   enrollStudentController
 );
 router.delete(
   "/:courseId/drop",
-  requireAuth,
+  authenticateJWT,
   requireStudent,
   dropStudentController
 );
@@ -58,13 +68,13 @@ router.delete(
 // ----------------------
 router.post(
   "/:courseId/grade/:studentId",
-  requireAuth,
+  authenticateJWT,
   requireTeacher,
   gradeStudentController
 );
 router.get(
   "/:courseId/grades",
-  requireAuth,
+  authenticateJWT,
   requireTeacher,
   getCourseGradesController
 );
@@ -74,7 +84,7 @@ router.get(
 // ----------------------
 router.get(
   "/grades/me",
-  requireAuth,
+  authenticateJWT,
   requireStudent,
   getStudentGradesController
 );

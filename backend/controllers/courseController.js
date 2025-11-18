@@ -11,7 +11,7 @@ import {
   getStudentGradesHelper,
 } from "../helpers/courseHelpers.js";
 
-import { auditHelper } from "../helpers/auditHelper.js";
+import { auditHelper } from "../helpers/auditHelpers.js";
 
 // ----------------------
 // COURSE MANAGEMENT

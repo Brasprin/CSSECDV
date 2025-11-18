@@ -1,7 +1,7 @@
 import express from "express";
 import {
-  register,
-  login,
+  registerController,
+  loginController,
   refreshTokenController,
   logoutController,
   changePasswordController,
@@ -15,8 +15,8 @@ const router = express.Router();
 // ----------------------
 // PUBLIC ROUTES
 // ----------------------
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", registerController);
+router.post("/login", loginController);
 router.post("/refresh-token", refreshTokenController);
 router.post("/forgot-password", forgotPasswordController);
 

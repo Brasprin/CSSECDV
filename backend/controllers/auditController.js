@@ -1,11 +1,11 @@
 // controllers/auditController.js
-import { getAuditLogs } from "../helpers/auditHelper.js";
+import { getAuditLogs } from "../helpers/auditHelpers.js";
 import {
   getUserMetadata,
   getCourseMetadata,
   getGradeMetadata,
   getEnrollmentMetadata,
-} from "../helpers/metadataHelper.js";
+} from "../helpers/metadataHelpers.js";
 
 export async function getAuditsController(req, res) {
   try {
