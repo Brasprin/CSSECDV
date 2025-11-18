@@ -1,39 +1,44 @@
 import {
   gradeStudentHelper,
-  getGradesForCourseHelper,
-  getStudentGradeHelper,
+  getCourseGradesHelper,
+  getStudentGradesHelper,
 } from "../helpers/gradeHelpers.js";
 
 // ----------------------
-// Assign / Update Grade
+// Teacher grades a student
 // ----------------------
 export async function gradeStudentController(req, res) {
   try {
     const { courseId, studentId } = req.params;
-    const { value } = req.body;
     const teacherId = req.user._id;
+    const { value } = req.body;
 
     const grade = await gradeStudentHelper(
       courseId,
       studentId,
-      teacherId,
-      value
+      value,
+      teacherId
     );
-    return res.status(200).json({ success: true, grade });
+
+    return res.status(200).json({
+      success: true,
+      message: "Student graded successfully",
+      grade,
+    });
   } catch (error) {
     return res.status(400).json({ success: false, error: error.message });
   }
 }
 
 // ----------------------
-// Retrieve all grades in a course (teacher only)
+// Teacher views all grades for their course
 // ----------------------
-export async function getGradesForCourseController(req, res) {
+export async function getCourseGradesController(req, res) {
   try {
-    const { courseId } = req.params;
     const teacherId = req.user._id;
+    const { courseId } = req.params;
 
-    const grades = await getGradesForCourseHelper(courseId, teacherId);
+    const grades = await getCourseGradesHelper(courseId, teacherId);
     return res.status(200).json({ success: true, grades });
   } catch (error) {
     return res.status(400).json({ success: false, error: error.message });
@@ -41,17 +46,14 @@ export async function getGradesForCourseController(req, res) {
 }
 
 // ----------------------
-// Retrieve single student grade (student or teacher)
+// Student views their own grades
 // ----------------------
-export async function getStudentGradeController(req, res) {
+export async function getStudentGradesController(req, res) {
   try {
-    const { courseId, studentId } = req.params;
+    const studentId = req.user._id;
 
-    const grade = await getStudentGradeHelper(courseId, studentId);
-    if (!grade)
-      return res.status(404).json({ success: false, error: "Grade not found" });
-
-    return res.status(200).json({ success: true, grade });
+    const grades = await getStudentGradesHelper(studentId);
+    return res.status(200).json({ success: true, grades });
   } catch (error) {
     return res.status(400).json({ success: false, error: error.message });
   }

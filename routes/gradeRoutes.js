@@ -1,36 +1,31 @@
 import express from "express";
 import {
   gradeStudentController,
-  getGradesForCourseController,
-  getStudentGradeController,
+  getCourseGradesController,
+  getStudentGradesController,
 } from "../controllers/gradeController.js";
 
 import { requireAuth } from "../middleware/authMiddleware.js";
 import { requireTeacher } from "../middleware/requireTeacher.js";
+import { requireStudent } from "../middleware/requireStudent.js";
 
 const router = express.Router();
 
-// Only teacher that owns the course can grade
+// Teacher routes
 router.post(
-  "/:courseId/student/:studentId",
+  "/:courseId/:studentId",
   requireAuth,
   requireTeacher,
   gradeStudentController
 );
-
-// Only teacher that owns the course can see all grades
 router.get(
-  "/:courseId",
+  "/course/:courseId",
   requireAuth,
   requireTeacher,
-  getGradesForCourseController
+  getCourseGradesController
 );
 
-// Optional: anyone (teacher/student) can see a student's grade
-router.get(
-  "/:courseId/student/:studentId",
-  requireAuth,
-  getStudentGradeController
-);
+// Student routes
+router.get("/me", requireAuth, requireStudent, getStudentGradesController);
 
 export default router;

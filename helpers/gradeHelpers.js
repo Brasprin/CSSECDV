@@ -1,8 +1,8 @@
 import Grade from "../models/Grade.js";
-import Enrollment from "../models/Enrollment.js";
+import Course from "../models/Course.js";
+import { finishEnrollmentHelper } from "./courseHelpers.js";
 
-// Allowed grade values
-const ALLOWED_GRADES = [
+const VALID_GRADES = [
   "4.0",
   "3.5",
   "3.0",
@@ -14,72 +14,60 @@ const ALLOWED_GRADES = [
   "W",
 ];
 
-// ----------------------
-// Validation
-// ----------------------
 function validateGrade(value) {
-  if (!ALLOWED_GRADES.includes(value)) {
-    throw new Error("Invalid grade value");
+  if (!VALID_GRADES.includes(value)) {
+    throw new Error(`Invalid grade value. Allowed: ${VALID_GRADES.join(", ")}`);
   }
   return value;
 }
 
-// ----------------------
-// Grade Management
-// ----------------------
+export async function finishEnrollmentHelper(courseId, studentId) {
+  const enrollment = await Enrollment.findOne({ courseId, student: studentId });
+  if (!enrollment) throw new Error("Student not enrolled in this course");
+
+  // Only allow finishing if student is currently ENROLLED
+  if (enrollment.status !== "ENROLLED") {
+    throw new Error(`Cannot finish: student status is ${enrollment.status}`);
+  }
+
+  enrollment.status = "FINISHED";
+  enrollment.updatedAt = new Date();
+  return await enrollment.save();
+}
+
 export async function gradeStudentHelper(
   courseId,
   studentId,
-  teacherId,
-  value
+  gradeValue,
+  teacherId
 ) {
-  const validatedValue = validateGrade(value);
-
-  // Ensure the teacher owns the course
-  const course = await Enrollment.model("Course").findById(courseId);
+  const course = await Course.findById(courseId);
   if (!course) throw new Error("Course not found");
-  if (!course.teacher.equals(teacherId))
-    throw new Error("Unauthorized: not course owner");
+  if (course.teacher.toString() !== teacherId.toString()) {
+    throw new Error("Unauthorized: Only the course teacher can grade");
+  }
 
-  // Ensure the student is enrolled
-  const enrollment = await Enrollment.findOne({
-    course: courseId,
-    student: studentId,
-  });
-  if (!enrollment) throw new Error("Student not enrolled in this course");
+  validateGrade(gradeValue);
 
-  // Upsert grade (create new or update existing)
-  const grade = await Grade.findOneAndUpdate(
-    { courseId, studentId },
-    {
-      value: validatedValue,
+  let grade = await Grade.findOne({ courseId, studentId });
+  if (grade) {
+    grade.value = gradeValue;
+    grade.gradedBy = teacherId;
+    grade.version += 1;
+    grade.updatedAt = new Date();
+  } else {
+    grade = new Grade({
+      courseId,
+      studentId,
+      value: gradeValue,
       gradedBy: teacherId,
-      updatedAt: new Date(),
-      $inc: { version: 1 },
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+    });
+  }
 
-  // Update enrollment status to FINISHED
-  enrollment.status = "FINISHED";
-  enrollment.updatedAt = new Date();
-  await enrollment.save();
+  await grade.save();
+
+  // Mark enrollment FINISHED
+  await finishEnrollmentHelper(courseId, studentId);
 
   return grade;
-}
-
-export async function getGradesForCourseHelper(courseId, teacherId) {
-  const course = await Enrollment.model("Course").findById(courseId);
-  if (!course) throw new Error("Course not found");
-  if (!course.teacher.equals(teacherId))
-    throw new Error("Unauthorized: not course owner");
-
-  return await Grade.find({ courseId }).populate(
-    "studentId",
-    "firstName lastName"
-  );
-}
-
-export async function getStudentGradeHelper(courseId, studentId) {
-  return await Grade.findOne({ courseId, studentId });
 }
