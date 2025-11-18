@@ -4,6 +4,12 @@ const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000/api/auth";
 
 export const authService = {
+  // Config endpoints
+  getAuthConfig: () => axios.get(`${API_URL}/config`),
+  getSecurityQuestions: () => axios.get(`${API_URL}/security-questions`),
+  getPasswordRequirements: () => axios.get(`${API_URL}/password-requirements`),
+  validatePassword: (password) =>
+    axios.post(`${API_URL}/validate-password`, { password }),
   register: (data) => axios.post(`${API_URL}/register`, data),
   login: (data) => axios.post(`${API_URL}/login`, data),
   logout: (refreshToken) => axios.post(`${API_URL}/logout`, { refreshToken }),
@@ -18,4 +24,5 @@ export const authService = {
     axios.post(`${API_URL}/admin/reset-user`, data, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+  getSecurityQuestions: () => axios.get(`${API_URL}/security-questions`),
 };

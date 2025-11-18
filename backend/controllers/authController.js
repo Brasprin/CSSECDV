@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import {
   validateEmail,
@@ -10,9 +11,14 @@ import {
   validateForgotPasswordPolicy,
   validateRegistrationSecurityQuestions,
   adminResetUser,
+  SECURITY_QUESTION_POOL,
 } from "../helpers/authHelpers.js";
 
 import { auditHelper } from "../helpers/auditHelpers.js";
+
+export function getSecurityQuestionPool() {
+  return SECURITY_QUESTION_POOL;
+}
 
 // ----------------------
 // REGISTER

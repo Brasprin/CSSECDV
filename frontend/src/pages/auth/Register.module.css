@@ -1,0 +1,455 @@
+/* ==========================================
+   REGISTER PAGE STYLES
+   ========================================== */
+
+.registerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-md);
+}
+
+.registerCard {
+  background-color: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  width: 100%;
+  max-width: 600px;
+  padding: var(--spacing-3xl);
+  animation: slideUp 0.5s ease-out;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================
+   HEADER SECTION
+   ========================================== */
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--neutral-900);
+  margin-bottom: var(--spacing-sm);
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--neutral-500);
+  margin-bottom: 0;
+}
+
+/* ==========================================
+   ERROR ALERT
+   ========================================== */
+.errorAlert {
+  background-color: var(--error-light);
+  color: var(--error-color);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--error-color);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================
+   FORM STYLES
+   ========================================== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--neutral-700);
+  display: block;
+}
+
+.input {
+  padding: var(--spacing-md);
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--neutral-900);
+  background-color: white;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family-base);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-lighter);
+}
+
+.input:disabled {
+  background-color: var(--neutral-100);
+  color: var(--neutral-500);
+  cursor: not-allowed;
+}
+
+.input::placeholder {
+  color: var(--neutral-400);
+}
+
+/* ==========================================
+   SELECT DROPDOWN
+   ========================================== */
+.select {
+  padding: var(--spacing-md);
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--neutral-900);
+  background-color: white;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family-base);
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-lighter);
+}
+
+.select:disabled {
+  background-color: var(--neutral-100);
+  color: var(--neutral-500);
+  cursor: not-allowed;
+}
+
+.select option:disabled {
+  color: var(--neutral-400);
+}
+
+/* ==========================================
+   PASSWORD FIELD WITH EYE ICON
+   ========================================== */
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordWrapper .input {
+  padding-right: var(--spacing-3xl);
+}
+
+.eyeButton {
+  position: absolute;
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-500);
+  transition: color var(--transition-fast);
+}
+
+.eyeButton:hover:not(:disabled) {
+  color: var(--primary-color);
+}
+
+.eyeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.eyeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==========================================
+   PASSWORD REQUIREMENTS CHECKLIST
+   ========================================== */
+.requirementsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--neutral-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.requirement.met {
+  color: var(--success-color);
+}
+
+.requirement.unmet {
+  color: var(--neutral-500);
+}
+
+.checkmark {
+  font-weight: var(--font-weight-bold);
+  min-width: 20px;
+}
+
+.requirementText {
+  flex: 1;
+}
+
+/* ==========================================
+   PASSWORD MATCH INDICATOR
+   ========================================== */
+.matchIndicator {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.matchIndicator.matched {
+  background-color: var(--success-light);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.matchIndicator.unmatched {
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+/* ==========================================
+   SECURITY QUESTIONS SECTION
+   ========================================== */
+.securityQuestionsSection {
+  padding: var(--spacing-lg);
+  background-color: var(--neutral-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--neutral-200);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--neutral-900);
+  margin-bottom: var(--spacing-sm);
+}
+
+.sectionSubtitle {
+  font-size: var(--font-size-sm);
+  color: var(--neutral-500);
+  margin-bottom: var(--spacing-lg);
+}
+
+.securityQuestionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.securityQuestionGroup:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.answerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.answerHint {
+  font-size: var(--font-size-xs);
+  color: var(--neutral-500);
+  margin-bottom: 0;
+}
+
+/* ==========================================
+   SUBMIT BUTTON
+   ========================================== */
+.submitButton {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  background-color: var(--neutral-300);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ==========================================
+   LOGIN SECTION
+   ========================================== */
+.loginSection {
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--neutral-200);
+  text-align: center;
+}
+
+.loginText {
+  font-size: var(--font-size-sm);
+  color: var(--neutral-600);
+  margin-bottom: 0;
+}
+
+.loginLink {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.loginLink:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   ========================================== */
+@media (max-width: 768px) {
+  .registerCard {
+    padding: var(--spacing-xl);
+    max-width: 100%;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: var(--font-size-xl);
+  }
+
+  .subtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .form {
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .submitButton {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+
+  .securityQuestionsSection {
+    padding: var(--spacing-md);
+  }
+
+  .sectionTitle {
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .registerCard {
+    padding: var(--spacing-lg);
+    max-height: 95vh;
+  }
+
+  .title {
+    font-size: var(--font-size-lg);
+  }
+
+  .form {
+    gap: var(--spacing-sm);
+  }
+
+  .formRow {
+    gap: var(--spacing-sm);
+  }
+
+  .requirementsContainer {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs);
+  }
+
+  .requirement {
+    font-size: var(--font-size-xs);
+  }
+
+  .securityQuestionsSection {
+    padding: var(--spacing-sm);
+  }
+
+  .securityQuestionGroup {
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+  }
+}

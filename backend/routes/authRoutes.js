@@ -7,6 +7,7 @@ import {
   changePasswordController,
   forgotPasswordController,
   adminResetUserController,
+  getSecurityQuestionPool,
 } from "../controllers/authController.js";
 import { authenticateJWT } from "../middleware/authMiddleware.js"; // middleware to verify JWT
 
@@ -30,5 +31,10 @@ router.post("/change-password", authenticateJWT, changePasswordController);
 // ADMIN ROUTES (JWT + admin check required)
 // ----------------------
 router.post("/admin/reset-user", authenticateJWT, adminResetUserController);
+
+// Helper
+router.get("/security-questions", (req, res) => {
+  res.json(getSecurityQuestionPool());
+});
 
 export default router;

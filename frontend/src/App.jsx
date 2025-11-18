@@ -1,63 +1,31 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+import StudentDashboard from "./pages/student/StudentDashboard";
 
-// Import routes
-import authRoutes from "./routes/authRoutes.js";
-import courseRoutes from "./routes/courseRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import auditRoutes from "./routes/auditRoutes.js";
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-import { connectDB } from "./config/db.js";
+        {/* Dashboard Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
 
-// Connect to DB
-connectDB();
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-dotenv.config();
-
-const app = express();
-
-// ----------------------
-// MIDDLEWARES
-// ----------------------
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ----------------------
-// ROUTES
-// ----------------------
-app.use("/api/auth", authRoutes); // login, register, change password, admin reset
-app.use("/api/courses", courseRoutes); // course management and enrollment
-app.use("/api/users", userRoutes); // list users / course students
-app.use("/api/audits", auditRoutes); // audit log retrieval (admins only)
-
-// ----------------------
-// HEALTH CHECK
-// ----------------------
-app.get("/", (req, res) => {
-  res.send("API is running!");
-});
-
-// ----------------------
-// GLOBAL ERROR HANDLER
-// ----------------------
-app.use(errorHandler);
-
-// ----------------------
-// CONNECT TO DB & START SERVER
-// ----------------------
-const PORT = process.env.PORT || 5000;
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("MongoDB connected");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
+        {/* 404 Fallback */}
+        <Route path="*" element={<div>404 - Page Not Found</div>} />
+      </Routes>
+    </Router>
+  );
+}

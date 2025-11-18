@@ -10,7 +10,7 @@ const PASSWORD_HISTORY_LIMIT = 2;
 const REQUIRED_SECURITY_QUESTIONS = 3;
 const MIN_SECURITY_ANSWER_LENGTH = 3;
 
-const SECURITY_QUESTION_POOL = [
+export const SECURITY_QUESTION_POOL = [
   "What is the name of your first pet?",
   "What is your mother's maiden name?",
   "What street did you grow up on?",
@@ -230,9 +230,15 @@ export async function handleLogin(user, password, req) {
     { expiresIn: "7d" }
   );
 
+  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
   await Session.create({
     userId: user._id,
-    refreshToken,
+    refreshTokenHash: refreshTokenHash,
+    issuedAt: now,
+    expiresAt: expiresAt,
     ip: req.ip,
     userAgent: req.headers["user-agent"],
   });
@@ -256,26 +262,62 @@ export async function handleLogin(user, password, req) {
 export async function refreshTokens(oldRefreshToken, req) {
   try {
     const payload = jwt.verify(oldRefreshToken, process.env.JWT_REFRESH_SECRET);
-    const session = await Session.findOne({
+
+    // Find all valid sessions for this user
+    const sessions = await Session.find({
       userId: payload.id,
-      refreshToken: oldRefreshToken,
       revokedAt: null,
     });
-    if (!session) return { success: false, error: "Invalid refresh token" };
 
+    if (!sessions || sessions.length === 0) {
+      return { success: false, error: "Invalid refresh token" };
+    }
+
+    // Find the session that matches this refresh token
+    let validSession = null;
+    for (const session of sessions) {
+      const isValid = await bcrypt.compare(
+        oldRefreshToken,
+        session.refreshTokenHash
+      );
+      if (isValid) {
+        validSession = session;
+        break;
+      }
+    }
+
+    if (!validSession) {
+      return { success: false, error: "Invalid refresh token" };
+    }
+
+    // Get user to get role
+    const user = await User.findById(payload.id);
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Create new tokens
     const accessToken = jwt.sign(
-      { id: payload.id, role: session.userRole },
+      { id: payload.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
+
     const newRefreshToken = jwt.sign(
       { id: payload.id },
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" }
     );
 
-    session.refreshToken = newRefreshToken;
-    await session.save();
+    // Hash and save new refresh token
+    const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, 10);
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    validSession.refreshTokenHash = newRefreshTokenHash;
+    validSession.issuedAt = now;
+    validSession.expiresAt = expiresAt;
+    await validSession.save();
 
     return {
       success: true,
@@ -283,7 +325,8 @@ export async function refreshTokens(oldRefreshToken, req) {
       refreshToken: newRefreshToken,
       userId: payload.id,
     };
-  } catch {
+  } catch (error) {
+    console.error("Token refresh error:", error.message);
     return { success: false, error: "Refresh token invalid or expired" };
   }
 }

@@ -1,0 +1,173 @@
+/* ==========================================
+   STUDENT DASHBOARD STYLES
+   ========================================== */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: var(--font-size-lg);
+  color: var(--neutral-600);
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--spacing-xl);
+}
+
+/* ==========================================
+   CARD STYLES
+   ========================================== */
+.card {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.cardHeader {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--neutral-200);
+  background-color: var(--neutral-50);
+}
+
+.cardHeader h3 {
+  font-size: var(--font-size-lg);
+  color: var(--neutral-900);
+  margin-bottom: 0;
+}
+
+.cardBody {
+  padding: var(--spacing-lg);
+}
+
+.cardBody p {
+  color: var(--neutral-600);
+  margin-bottom: var(--spacing-md);
+}
+
+.placeholder {
+  color: var(--neutral-400);
+  font-style: italic;
+}
+
+.btn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn:hover {
+  background-color: var(--primary-dark);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================
+   STATS CONTAINER
+   ========================================== */
+.statsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  grid-column: 1 / -1;
+}
+
+.statCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.statCard:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.statValue {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.statLabel {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   ========================================== */
+@media (max-width: 768px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .statsContainer {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .statCard {
+    padding: var(--spacing-lg);
+  }
+
+  .statValue {
+    font-size: var(--font-size-3xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboardGrid {
+    gap: var(--spacing-md);
+  }
+
+  .card {
+    border-radius: var(--radius-md);
+  }
+
+  .cardHeader {
+    padding: var(--spacing-md);
+  }
+
+  .cardBody {
+    padding: var(--spacing-md);
+  }
+
+  .cardHeader h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .statsContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .statValue {
+    font-size: var(--font-size-2xl);
+  }
+}

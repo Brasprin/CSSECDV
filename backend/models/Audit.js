@@ -7,13 +7,15 @@ const auditSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     index: true,
-    required: true,
+    required: false,
+    default: null,
   },
 
   actorRole: {
     type: String,
     enum: ["ADMIN", "TEACHER", "STUDENT"],
     default: "STUDENT",
+    required: false,
   },
 
   action: { type: String, index: true, required: true },
