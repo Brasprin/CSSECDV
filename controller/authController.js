@@ -12,10 +12,15 @@ import {
   adminResetUser,
 } from "../helpers/authHelpers.js";
 
+import { auditHelper } from "../helpers/auditHelper.js";
+
 // ----------------------
 // REGISTER
 // ----------------------
-export async function register(req, res) {
+export async function registerController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+
   try {
     const {
       email,
@@ -77,7 +82,7 @@ export async function register(req, res) {
 // ----------------------
 // LOGIN
 // ----------------------
-export async function login(req, res) {
+export async function loginController(req, res) {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email.toLowerCase().trim() });
