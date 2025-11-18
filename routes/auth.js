@@ -2,39 +2,33 @@ import express from "express";
 import {
   register,
   login,
-  refresh,
+  refreshTokenController,
   logoutController,
   changePasswordController,
-  forgotPasswordReset,
-  getSecurityQuestions,
-  checkEmailAvailability,
+  forgotPasswordController,
   adminResetUserController,
 } from "../controllers/authController.js";
-
-import { requireAuth, requireRole } from "../middleware/auth.js";
+import { authenticateJWT } from "../middleware/authMiddleware.js"; // middleware to verify JWT
 
 const router = express.Router();
 
 // ----------------------
-// Public Auth Endpoints
+// PUBLIC ROUTES
 // ----------------------
 router.post("/register", register);
 router.post("/login", login);
-router.post("/refresh", refresh);
-router.post("/logout", logoutController);
-router.post("/change-password", requireAuth, changePasswordController);
-router.post("/check-email", checkEmailAvailability);
-router.get("/security-questions", getSecurityQuestions);
-router.post("/forgot-password/reset", forgotPasswordReset);
+router.post("/refresh-token", refreshTokenController);
+router.post("/forgot-password", forgotPasswordController);
 
 // ----------------------
-// Admin-Only Endpoints
+// PROTECTED ROUTES (JWT required)
 // ----------------------
-router.post(
-  "/admin/reset-user",
-  requireAuth,
-  requireRole("ADMIN"),
-  adminResetUserController
-);
+router.post("/logout", authenticateJWT, logoutController);
+router.post("/change-password", authenticateJWT, changePasswordController);
+
+// ----------------------
+// ADMIN ROUTES (JWT + admin check required)
+// ----------------------
+router.post("/admin/reset-user", authenticateJWT, adminResetUserController);
 
 export default router;

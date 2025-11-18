@@ -7,7 +7,7 @@ const courseSchema = new mongoose.Schema({
   description: String,
   capacity: { type: Number, default: 40 },
 
-  professor: {
+  teacher: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
