@@ -13,7 +13,7 @@ export async function getAllUsersController(req, res) {
         .json({ success: false, error: "Access denied: Admins only" });
     }
 
-    const users = await User.find({}, "firstName lastName email role").lean();
+    const users = await User.find({}, "firstName lastName email role lastLoginAt lastFailedLoginAt createdAt lockUntil").lean();
 
     return res.status(200).json({ success: true, users, count: users.length });
   } catch (error) {

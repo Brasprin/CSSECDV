@@ -1,8 +1,8 @@
 /* ==========================================
-   AUDIT LOGS PAGE STYLES
+   USER MANAGEMENT PAGE STYLES
    ========================================== */
 
-.auditContainer {
+.userContainer {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
@@ -36,7 +36,7 @@
   flex-wrap: wrap;
 }
 
-/* New: Combined row for log type buttons (left) and date dropdown (right) */
+/* Combined row for role buttons (left) and search (right) */
 .filterRow {
   display: flex;
   flex-direction: row;
@@ -60,44 +60,16 @@
   margin: 0;
 }
 
-/* Back button styling */
-.backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 2px solid var(--neutral-300);
-  background-color: white;
-  color: var(--neutral-700);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  text-decoration: none;
-}
-
-.backButton:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  background-color: var(--primary-lighter);
-}
-
-.backButtonIcon {
-  font-size: var(--font-size-base);
-  line-height: 1;
-}
-
-/* New: Date filter group aligned to the right */
-.dateFilterGroup {
+/* Search group aligned to the right */
+.searchGroup {
   margin-left: auto;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
 }
 
-/* New: Select styling for the date filter */
-.dateSelect {
+/* Search input styling */
+.searchInput {
   padding: var(--spacing-md) var(--spacing-lg);
   border: 2px solid var(--neutral-300);
   background-color: white;
@@ -105,7 +77,13 @@
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
 }
 
 .filterBtn {
@@ -137,17 +115,45 @@
   border-color: var(--primary-dark);
 }
 
+/* Back button styling */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 2px solid var(--neutral-300);
+  background-color: white;
+  color: var(--neutral-700);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-decoration: none;
+}
+
+.backButton:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background-color: var(--primary-lighter);
+}
+
+.backButtonIcon {
+  font-size: var(--font-size-base);
+  line-height: 1;
+}
+
 /* ==========================================
-   LOGS INFO
+   USERS INFO
    ========================================== */
-.logsInfo {
+.usersInfo {
   background-color: var(--neutral-50);
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-md);
   border-left: 4px solid var(--primary-color);
 }
 
-.logsInfo p {
+.usersInfo p {
   margin-bottom: 0;
   color: var(--neutral-700);
   font-size: var(--font-size-sm);
@@ -163,18 +169,18 @@
   overflow-x: auto;
 }
 
-.logsTable {
+.usersTable {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
 }
 
-.logsTable thead {
+.usersTable thead {
   background-color: var(--neutral-100);
   border-bottom: 2px solid var(--neutral-300);
 }
 
-.logsTable th {
+.usersTable th {
   padding: var(--spacing-md) var(--spacing-lg);
   text-align: left;
   font-weight: var(--font-weight-semibold);
@@ -182,16 +188,16 @@
   white-space: nowrap;
 }
 
-.logsTable tbody tr {
+.usersTable tbody tr {
   border-bottom: 1px solid var(--neutral-200);
   transition: background-color var(--transition-fast);
 }
 
-.logsTable tbody tr:hover {
+.usersTable tbody tr:hover {
   background-color: var(--neutral-50);
 }
 
-.logsTable td {
+.usersTable td {
   padding: var(--spacing-md) var(--spacing-lg);
   color: var(--neutral-700);
 }
@@ -199,43 +205,19 @@
 /* ==========================================
    TABLE CELL STYLES
    ========================================== */
-.timestamp {
+.email {
+  min-width: 200px;
   font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
   color: var(--neutral-600);
-  white-space: nowrap;
 }
 
-.actor {
-  min-width: 250px;
+.firstName {
+  min-width: 120px;
 }
 
-.actorInfo {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.actorName {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.actorFullName {
-  font-weight: var(--font-weight-semibold);
-  color: var(--neutral-900);
-}
-
-.actorEmail {
-  font-size: var(--font-size-xs);
-  color: var(--neutral-500);
-}
-
-.actorId {
-  font-size: var(--font-size-xs);
-  color: var(--neutral-500);
-  font-style: italic;
+.lastName {
+  min-width: 120px;
 }
 
 .role {
@@ -290,11 +272,12 @@
   letter-spacing: 0.5px;
 }
 
-.action {
-  min-width: 200px;
+.lockUntil {
+  min-width: 150px;
+  font-size: var(--font-size-xs);
 }
 
-.badgeError {
+.lockUntilBadge {
   display: inline-block;
   padding: var(--spacing-xs) var(--spacing-md);
   background-color: var(--error-light);
@@ -302,114 +285,29 @@
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  white-space: nowrap;
 }
 
-.badgeSuccess {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--success-light);
-  color: var(--success-color);
-  border-radius: var(--radius-md);
+.lockUntilNone {
+  color: var(--neutral-500);
+  font-style: italic;
+}
+
+.lastLoginAt {
+  min-width: 150px;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
+  color: var(--neutral-600);
 }
 
-.badgeInfo {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--info-light);
-  color: var(--info-color);
-  border-radius: var(--radius-md);
+.lastFailedLoginAt {
+  min-width: 150px;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
+  color: var(--neutral-600);
 }
 
-.entityType {
-  min-width: 100px;
-  color: var(--neutral-700);
-}
-
-.severity {
-  min-width: 100px;
-}
-
-.severityCritical {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: #fee2e2;
-  color: #dc2626;
-  border-radius: var(--radius-md);
+.createdAt {
+  min-width: 150px;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.severityError {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--error-light);
-  color: var(--error-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.severityWarning {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--warning-light);
-  color: var(--warning-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.severityInfo {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--info-light);
-  color: var(--info-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status {
-  min-width: 90px;
-}
-
-.statusSuccess {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--success-light);
-  color: var(--success-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.statusFailure {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  background-color: var(--error-light);
-  color: var(--error-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--neutral-600);
 }
 
 /* ==========================================
@@ -457,21 +355,17 @@
    RESPONSIVE DESIGN
    ========================================== */
 @media (max-width: 1024px) {
-  .logsTable {
+  .usersTable {
     font-size: var(--font-size-xs);
   }
 
-  .logsTable th,
-  .logsTable td {
+  .usersTable th,
+  .usersTable td {
     padding: var(--spacing-md) var(--spacing-md);
   }
 
-  .timestamp {
-    font-size: var(--font-size-xs);
-  }
-
-  .actor {
-    min-width: 200px;
+  .email {
+    min-width: 150px;
   }
 }
 
@@ -489,32 +383,23 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .logsTable {
+  .usersTable {
     font-size: var(--font-size-xs);
-    min-width: 800px;
+    min-width: 900px;
   }
 
-  .logsTable th,
-  .logsTable td {
+  .usersTable th,
+  .usersTable td {
     padding: var(--spacing-sm) var(--spacing-md);
   }
 
-  .actor {
-    min-width: 180px;
-  }
-
-  .actorEmail {
-    display: none;
-  }
-
-  .timestamp {
-    font-size: var(--font-size-xs);
-    min-width: 140px;
+  .email {
+    min-width: 120px;
   }
 }
 
 @media (max-width: 480px) {
-  .auditContainer {
+  .userContainer {
     gap: var(--spacing-lg);
   }
 
@@ -535,11 +420,11 @@
     font-size: var(--font-size-xs);
   }
 
-  .logsInfo {
+  .usersInfo {
     padding: var(--spacing-md);
   }
 
-  .logsInfo p {
+  .usersInfo p {
     font-size: var(--font-size-xs);
   }
 
@@ -547,47 +432,33 @@
     border-radius: var(--radius-md);
   }
 
-  .logsTable {
+  .usersTable {
     font-size: var(--font-size-xs);
-    min-width: 600px;
+    min-width: 700px;
   }
 
-  .logsTable th,
-  .logsTable td {
+  .usersTable th,
+  .usersTable td {
     padding: var(--spacing-sm);
   }
 
-  .logsTable th {
+  .usersTable th {
     font-size: var(--font-size-xs);
   }
 
-  .actor {
-    min-width: 150px;
+  .email {
+    min-width: 100px;
   }
 
-  .actorFullName {
-    font-size: var(--font-size-xs);
+  .firstName {
+    min-width: 80px;
   }
 
-  .actorEmail {
-    display: none;
+  .lastName {
+    min-width: 80px;
   }
 
-  .timestamp {
-    font-size: var(--font-size-xs);
-    min-width: 120px;
-  }
-
-  .roleBadge,
-  .badgeError,
-  .badgeSuccess,
-  .badgeInfo,
-  .severityCritical,
-  .severityError,
-  .severityWarning,
-  .severityInfo,
-  .statusSuccess,
-  .statusFailure {
+  .roleBadge {
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: var(--font-size-xs);
   }

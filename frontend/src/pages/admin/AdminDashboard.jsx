@@ -63,7 +63,12 @@ export default function AdminDashboard() {
             <p className={styles.placeholder}>
               View and manage all users in the system.
             </p>
-            <button className={styles.btn}>Manage Users</button>
+            <button
+              className={styles.btn}
+              onClick={() => handleNavigate(navigate, "/admin/user-management")}
+            >
+              Manage Users
+            </button>
           </div>
         </div>
 

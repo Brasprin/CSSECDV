@@ -168,9 +168,22 @@ export default function AuditLogs() {
     withinDateFilter(getField(l, "timestamp"))
   );
 
+  const getRoleBadgeClass = (role) => {
+    switch (role) {
+      case "ADMIN":
+        return styles.roleBadgeAdmin;
+      case "TEACHER":
+        return styles.roleBadgeTeacher;
+      case "STUDENT":
+        return styles.roleBadgeStudent;
+      default:
+        return styles.roleBadge;
+    }
+  };
+
   if (loading && logs.length === 0) {
     return (
-      <Layout user={user} title="Audit Logs">
+      <Layout user={user}>
         <div className={styles.loading}>Loading audit logs...</div>
       </Layout>
     );
@@ -181,8 +194,20 @@ export default function AuditLogs() {
   }
 
   return (
-    <Layout user={user} title="Audit Logs">
+    <Layout user={user}>
       <div className={styles.auditContainer}>
+        {/* Page Header with Back button and Title */}
+        <div className={styles.headerRow}>
+          <button
+            className={styles.backButton}
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+          >
+            <span className={styles.backButtonIcon}>←</span>
+            Back
+          </button>
+          <h2 className={styles.pageHeaderTitle}>Audit Logs</h2>
+        </div>
         {/* Filter Section */}
         <div className={styles.filterSection}>
           <div className={`${styles.filterGroup} ${styles.filterRow}`}>
@@ -310,7 +335,9 @@ export default function AuditLogs() {
                         </div>
                       </td>
                       <td className={styles.role}>
-                        <span className={styles.roleBadge}>{displayRole}</span>
+                        <span className={getRoleBadgeClass(displayRole)}>
+                          {displayRole}
+                        </span>
                       </td>
                       <td className={styles.action}>
                         <span className={getActionBadgeClass(action)}>
