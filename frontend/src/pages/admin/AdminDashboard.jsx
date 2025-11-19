@@ -50,7 +50,7 @@ export default function AdminDashboard() {
           <div className={styles.cardBody}>
             <p>
               You're logged in as an administrator. Here you can manage users,
-              view audit logs, and oversee the entire system.
+              manage roles, view audit logs, and manage your account setting.
             </p>
           </div>
         </div>

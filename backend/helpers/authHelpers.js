@@ -377,15 +377,15 @@ export async function changePassword(
       return { success: false, error: "Current password is incorrect" };
   }
 
-  // Step 2: Validate security answers (non-admin, skip for force change)
-  if (!forceChange && user.role !== "ADMIN") {
+  // Step 2: Validate security answers (only if provided and user is not admin)
+  if (!forceChange && user.role !== "ADMIN" && securityAnswers) {
     const secAnsValid = await validateSecurityAnswers(user, securityAnswers);
     if (!secAnsValid.success)
       return { success: false, error: secAnsValid.error };
   }
 
-  // Step 2b: Validate security answers (for force change, always validate)
-  if (forceChange) {
+  // Step 2b: Validate security answers (for force change, always validate if provided)
+  if (forceChange && securityAnswers) {
     const secAnsValid = await validateSecurityAnswers(user, securityAnswers);
     if (!secAnsValid.success)
       return { success: false, error: secAnsValid.error };

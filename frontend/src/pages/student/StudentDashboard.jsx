@@ -45,19 +45,37 @@ export default function StudentDashboard() {
           </div>
           <div className={styles.cardBody}>
             <p>
-              You're logged in as a student. Here you can view your enrolled
-              courses, check your grades, and manage your academic progress.
+              You're logged in as a student. Here you can enroll to a courses,
+              view your enrolled courses, check your grades, and manage your
+              account setting.
             </p>
           </div>
         </div>
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3>Enrolled Courses</h3>
+            <h3>Enroll in a Course</h3>
           </div>
           <div className={styles.cardBody}>
             <p className={styles.placeholder}>
-              Your enrolled courses will appear here.
+              Browse available courses and enroll in the ones you want.
+            </p>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/student/browse-courses")}
+            >
+              View Courses
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>My Courses</h3>
+          </div>
+          <div className={styles.cardBody}>
+            <p className={styles.placeholder}>
+              See all the courses you’re currently enrolled in.
             </p>
             <button className={styles.btn}>View Courses</button>
           </div>
@@ -71,7 +89,29 @@ export default function StudentDashboard() {
             <p className={styles.placeholder}>
               Your grades and academic performance will appear here.
             </p>
-            <button className={styles.btn}>View Grades</button>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/student/my-grades")}
+            >
+              View Grades
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>Account Settings</h3>
+          </div>
+          <div className={styles.cardBody}>
+            <p className={styles.placeholder}>
+              Manage profile, password, or delete account.
+            </p>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/account-settings")}
+            >
+              Account Settings
+            </button>
           </div>
         </div>
       </div>

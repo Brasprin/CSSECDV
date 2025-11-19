@@ -34,7 +34,6 @@ export default function AccountSettings() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [successType, setSuccessType] = useState(""); // "profile" or "password"
-  const [securityQuestionPool, setSecurityQuestionPool] = useState([]);
 
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -84,24 +83,12 @@ export default function AccountSettings() {
         firstName: userData.firstName,
         lastName: userData.lastName,
       });
-      fetchSecurityQuestions(token);
     } catch (error) {
       console.error("Failed to parse user data:", error);
       navigate("/login");
     }
     setLoading(false);
   }, [navigate]);
-
-  const fetchSecurityQuestions = async (token) => {
-    try {
-      const response = await authService.getSecurityQuestions();
-      if (response.data && Array.isArray(response.data)) {
-        setSecurityQuestionPool(response.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch security questions:", err);
-    }
-  };
 
   // Profile handlers
   const handleProfileChange = (e) => {

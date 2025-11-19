@@ -46,7 +46,8 @@ export default function TeacherDashboard() {
           <div className={styles.cardBody}>
             <p>
               You're logged in as a teacher. Here you can manage your courses,
-              view student enrollments, and manage grades.
+              view student enrollments, manage student grades, and manage your
+              account setting..
             </p>
           </div>
         </div>
