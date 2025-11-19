@@ -4,7 +4,7 @@ import Layout from "../../components/Layout";
 import { userService } from "../../services/userService";
 import styles from "./UserManagement.module.css";
 
-export default function UserManagement() {
+export default function UserRole() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
@@ -12,6 +12,7 @@ export default function UserManagement() {
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [updatingUserId, setUpdatingUserId] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -84,6 +85,37 @@ export default function UserManagement() {
     }
   };
 
+  const handleRoleChange = async (userId, currentRole, newRole) => {
+    if (currentRole === newRole) return;
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setError("Unauthorized. Please login again.");
+      return;
+    }
+
+    setUpdatingUserId(userId);
+    try {
+      const response = await userService.updateUserRole(userId, newRole, token);
+      if (response.data.success) {
+        // Update the user in the list
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u._id === userId ? { ...u, role: newRole } : u
+          )
+        );
+        setError(null);
+      } else {
+        setError(response.data.error || "Failed to update user role");
+      }
+    } catch (err) {
+      console.error("Error updating user role:", err);
+      setError(err.response?.data?.error || "Failed to update user role");
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   // Filter users by role and search query
   const filteredUsers = users.filter((u) => {
     const roleMatch = roleFilter === "ALL" || u.role === roleFilter;
@@ -120,7 +152,7 @@ export default function UserManagement() {
             <span className={styles.backButtonIcon}>←</span>
             Back
           </button>
-          <h2 className={styles.pageHeaderTitle}>User Management</h2>
+          <h2 className={styles.pageHeaderTitle}>User Roles</h2>
         </div>
 
         {/* Filter Section */}
@@ -200,14 +232,9 @@ export default function UserManagement() {
                   <th className={styles.email}>Email</th>
                   <th className={styles.firstName}>First Name</th>
                   <th className={styles.lastName}>Last Name</th>
-                  <th className={styles.role}>Role</th>
-                  <th className={styles.lockUntil}>Lock Until</th>
-                  <th className={styles.lastLoginAt}>Last Login</th>
-                  <th className={styles.lastFailedLoginAt}>
-                    Last Failed Login
-                  </th>
+                  <th className={styles.role}>Current Role</th>
+                  <th className={styles.role}>Change Role</th>
                   <th className={styles.createdAt}>Created At</th>
-                  <th className={styles.actions}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,45 +248,25 @@ export default function UserManagement() {
                         {u.role}
                       </span>
                     </td>
-                    <td className={styles.lockUntil}>
-                      {u.lockUntil ? (
-                        <span className={styles.lockUntilBadge}>
-                          {formatDate(u.lockUntil)}
-                        </span>
+                    <td className={styles.role}>
+                      {u.role === "ADMIN" ? (
+                        <span className={styles.lockUntilNone}>Restricted</span>
                       ) : (
-                        <span className={styles.lockUntilNone}>None</span>
+                        <select
+                          value={u.role}
+                          onChange={(e) =>
+                            handleRoleChange(u._id, u.role, e.target.value)
+                          }
+                          disabled={updatingUserId === u._id}
+                          className={styles.roleSelect}
+                        >
+                          <option value="STUDENT">Student</option>
+                          <option value="TEACHER">Teacher</option>
+                        </select>
                       )}
-                    </td>
-                    <td className={styles.lastLoginAt}>
-                      {formatDate(u.lastLoginAt)}
-                    </td>
-                    <td className={styles.lastFailedLoginAt}>
-                      {formatDate(u.lastFailedLoginAt)}
                     </td>
                     <td className={styles.createdAt}>
                       {formatDate(u.createdAt)}
-                    </td>
-                    <td className={styles.actions}>
-                      {u.role !== "ADMIN" ? (
-                        <button
-                          className={styles.actionButton}
-                          onClick={() =>
-                            navigate(
-                              `/admin/user-management/${u._id}/reset-password`,
-                              {
-                                state: {
-                                  userEmail: u.email,
-                                  userName: `${u.firstName} ${u.lastName}`,
-                                },
-                              }
-                            )
-                          }
-                        >
-                          Change Password
-                        </button>
-                      ) : (
-                        <span className={styles.lockUntilNone}>Restricted</span>
-                      )}
                     </td>
                   </tr>
                 ))}

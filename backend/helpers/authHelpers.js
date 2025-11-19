@@ -222,7 +222,7 @@ export async function handleLogin(user, password, req) {
   const accessToken = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: "30m" }
   );
   const refreshToken = jwt.sign(
     { id: user._id },
@@ -300,7 +300,7 @@ export async function refreshTokens(oldRefreshToken, req) {
     const accessToken = jwt.sign(
       { id: payload.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "30m" }
     );
 
     const newRefreshToken = jwt.sign(
@@ -369,7 +369,10 @@ export async function changePassword(
 
   // Step 1: Validate current password (skip for force change)
   if (!forceChange) {
-    const validCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
+    const validCurrent = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash
+    );
     if (!validCurrent)
       return { success: false, error: "Current password is incorrect" };
   }

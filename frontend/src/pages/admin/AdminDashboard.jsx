@@ -91,35 +91,35 @@ export default function AdminDashboard() {
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3>System Settings</h3>
-          </div>
-          <div className={styles.cardBody}>
-            <p>Configure system-wide settings and security policies.</p>
-            <button className={styles.btn}>Settings</button>
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
             <h3>User Roles</h3>
           </div>
           <div className={styles.cardBody}>
             <p className={styles.placeholder}>
               Manage user roles and permissions.
             </p>
-            <button className={styles.btn}>Manage Roles</button>
+            <button
+              className={styles.btn}
+              onClick={() => handleNavigate(navigate, "/admin/user-roles")}
+            >
+              Manage Roles
+            </button>
           </div>
         </div>
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3>Reports</h3>
+            <h3>Account Settings</h3>
           </div>
           <div className={styles.cardBody}>
             <p className={styles.placeholder}>
-              Generate and view system reports.
+              Manage profile, password, or delete account.
             </p>
-            <button className={styles.btn}>View Reports</button>
+            <button
+              className={styles.btn}
+              onClick={() => handleNavigate(navigate, "/account-settings")}
+            >
+              Account Settings
+            </button>
           </div>
         </div>
 

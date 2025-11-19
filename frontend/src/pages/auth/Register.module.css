@@ -2,6 +2,8 @@
    REGISTER PAGE STYLES
    ========================================== */
 
+/* Likely current styles for centering */
+
 .registerContainer {
   display: flex;
   align-items: center;

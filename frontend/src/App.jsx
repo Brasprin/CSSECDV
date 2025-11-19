@@ -10,8 +10,11 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AuditLogs from "./pages/admin/AuditLogs";
 import UserManagement from "./pages/admin/UserManagement";
+import UserRole from "./pages/admin/UserRole";
+import AccountSettings from "./pages/shared/AccountSettings";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";
+import AdminResetUser from "./pages/admin/AdminResetUser";
 
 export default function App() {
   return (
@@ -26,6 +29,9 @@ export default function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/audit-logs" element={<AuditLogs />} />
         <Route path="/admin/user-management" element={<UserManagement />} />
+        <Route path="/admin/user-management/:userId/reset-password" element={<AdminResetUser />} />
+        <Route path="/admin/user-roles" element={<UserRole />} />
+        <Route path="/account-settings" element={<AccountSettings />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
 
