@@ -42,7 +42,10 @@ export default function CreateCourse() {
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const validate = () => {
@@ -97,7 +100,9 @@ export default function CreateCourse() {
       }
     } catch (err) {
       console.error(err);
-      setError(err?.response?.data?.error || err.message || "Failed to create course");
+      setError(
+        err?.response?.data?.error || err.message || "Failed to create course"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -112,19 +117,28 @@ export default function CreateCourse() {
   }
 
   return (
-    <Layout user={user} title="Create New Course">
+    <Layout user={user}>
+      <div className={styles.headerRow}>
+        <button
+          className={styles.backButton}
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+        >
+          <span className={styles.backButtonIcon}>←</span>
+          Back
+        </button>
+        <h2 className={styles.pageHeaderTitle}>Create New Courses</h2>
+      </div>
       <div className={styles.container}>
-        <div className={styles.header}>
-          <div className={styles.title}>New Course</div>
-        </div>
-
         {error ? <div className={styles.error}>{error}</div> : null}
         {message ? <div className={styles.success}>{message}</div> : null}
 
         <form className={styles.form} onSubmit={onSubmit} noValidate>
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="code">Course Code</label>
+              <label className={styles.label} htmlFor="code">
+                Course Code
+              </label>
               <input
                 id="code"
                 name="code"
@@ -138,7 +152,9 @@ export default function CreateCourse() {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="section">Section</label>
+              <label className={styles.label} htmlFor="section">
+                Section
+              </label>
               <input
                 id="section"
                 name="section"
@@ -153,7 +169,9 @@ export default function CreateCourse() {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="title">Title</label>
+            <label className={styles.label} htmlFor="title">
+              Title
+            </label>
             <input
               id="title"
               name="title"
@@ -167,7 +185,9 @@ export default function CreateCourse() {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="description">Description</label>
+            <label className={styles.label} htmlFor="description">
+              Description
+            </label>
             <textarea
               id="description"
               name="description"
@@ -181,7 +201,9 @@ export default function CreateCourse() {
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="capacity">Capacity</label>
+              <label className={styles.label} htmlFor="capacity">
+                Capacity
+              </label>
               <input
                 id="capacity"
                 name="capacity"
@@ -197,7 +219,9 @@ export default function CreateCourse() {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label} htmlFor="status">Status</label>
+              <label className={styles.label} htmlFor="status">
+                Status
+              </label>
               <select
                 id="status"
                 name="status"
@@ -213,11 +237,19 @@ export default function CreateCourse() {
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Dropping Policy</label>
-            <div className={styles.policyGroup} role="radiogroup" aria-label="Dropping policy">
+            <div
+              className={styles.policyGroup}
+              role="radiogroup"
+              aria-label="Dropping policy"
+            >
               <button
                 type="button"
-                className={`${styles.policyOption} ${form.droppingAllowed ? styles.policyAllowedActive : ''}`}
-                onClick={() => setForm((p) => ({ ...p, droppingAllowed: true }))}
+                className={`${styles.policyOption} ${
+                  form.droppingAllowed ? styles.policyAllowedActive : ""
+                }`}
+                onClick={() =>
+                  setForm((p) => ({ ...p, droppingAllowed: true }))
+                }
                 aria-pressed={form.droppingAllowed}
                 aria-label="Dropping allowed"
               >
@@ -226,25 +258,43 @@ export default function CreateCourse() {
               </button>
               <button
                 type="button"
-                className={`${styles.policyOption} ${!form.droppingAllowed ? styles.policyNotAllowedActive : ''}`}
-                onClick={() => setForm((p) => ({ ...p, droppingAllowed: false }))}
+                className={`${styles.policyOption} ${
+                  !form.droppingAllowed ? styles.policyNotAllowedActive : ""
+                }`}
+                onClick={() =>
+                  setForm((p) => ({ ...p, droppingAllowed: false }))
+                }
                 aria-pressed={!form.droppingAllowed}
                 aria-label="Dropping not allowed"
               >
-                <span className={styles.policyDotNotAllowed} aria-hidden="true" />
+                <span
+                  className={styles.policyDotNotAllowed}
+                  aria-hidden="true"
+                />
                 Not allowed
               </button>
             </div>
-            <div className={styles.hint}>Choose if students can drop this course after enrolling.</div>
+            <div className={styles.hint}>
+              Choose if students can drop this course after enrolling.
+            </div>
           </div>
 
           <div className={styles.divider} />
 
           <div className={styles.actions}>
-            <button type="button" className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => navigate(-1)} disabled={submitting}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnSecondary}`}
+              onClick={() => navigate(-1)}
+              disabled={submitting}
+            >
               Cancel
             </button>
-            <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`} disabled={submitting}>
+            <button
+              type="submit"
+              className={`${styles.btn} ${styles.btnPrimary}`}
+              disabled={submitting}
+            >
               {submitting ? "Creating..." : "Create Course"}
             </button>
           </div>

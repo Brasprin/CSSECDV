@@ -10,6 +10,8 @@ import {
   gradeStudentController,
   getCourseGradesController,
   getStudentGradesController,
+  getCourseEnrolledStudentsController,
+  removeStudentFromCourseController,
 } from "../controllers/courseController.js";
 
 import { authenticateJWT } from "../middleware/authMiddleware.js";
@@ -28,23 +30,15 @@ router.get(
   requireTeacher,
   getTeacherCoursesController
 );
+
+// ----------------------
+// STUDENT VIEW GRADES (Protected)
+// ----------------------
 router.get(
-  "/:courseId",
+  "/grades/me",
   authenticateJWT,
-  requireTeacher,
-  getCourseByIdController
-);
-router.put(
-  "/:courseId",
-  authenticateJWT,
-  requireTeacher,
-  updateCourseController
-);
-router.delete(
-  "/:courseId",
-  authenticateJWT,
-  requireTeacher,
-  deleteCourseController
+  requireStudent,
+  getStudentGradesController
 );
 
 // ----------------------
@@ -66,27 +60,54 @@ router.delete(
 // ----------------------
 // TEACHER GRADING (Protected)
 // ----------------------
-router.post(
-  "/:courseId/grade/:studentId",
-  authenticateJWT,
-  requireTeacher,
-  gradeStudentController
-);
 router.get(
   "/:courseId/grades",
   authenticateJWT,
   requireTeacher,
   getCourseGradesController
 );
-
-// ----------------------
-// STUDENT VIEW GRADES (Protected)
-// ----------------------
-router.get(
-  "/grades/me",
+router.post(
+  "/:courseId/grade/:studentId",
   authenticateJWT,
-  requireStudent,
-  getStudentGradesController
+  requireTeacher,
+  gradeStudentController
 );
 
+// ----------------------
+// TEACHER VIEW ENROLLED STUDENTS (Protected)
+// ----------------------
+router.get(
+  "/:courseId/students",
+  authenticateJWT,
+  requireTeacher,
+  getCourseEnrolledStudentsController
+);
+router.delete(
+  "/:courseId/students/:studentId",
+  authenticateJWT,
+  requireTeacher,
+  removeStudentFromCourseController
+);
+
+// ----------------------
+// GENERIC COURSE ROUTES (Protected) - MUST BE LAST
+// ----------------------
+router.get(
+  "/:courseId",
+  authenticateJWT,
+  requireTeacher,
+  getCourseByIdController
+);
+router.put(
+  "/:courseId",
+  authenticateJWT,
+  requireTeacher,
+  updateCourseController
+);
+router.delete(
+  "/:courseId",
+  authenticateJWT,
+  requireTeacher,
+  deleteCourseController
+);
 export default router;

@@ -225,7 +225,7 @@ export async function handleLogin(user, password, req) {
     { expiresIn: "30m" }
   );
   const refreshToken = jwt.sign(
-    { id: user._id },
+    { id: user._id, role: user.role },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: "7d" }
   );
@@ -304,7 +304,7 @@ export async function refreshTokens(oldRefreshToken, req) {
     );
 
     const newRefreshToken = jwt.sign(
-      { id: payload.id },
+      { id: payload.id, role: user.role },
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" }
     );

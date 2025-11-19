@@ -20,6 +20,7 @@ export async function authenticateJWT(req, res, next) {
 
     // Attach user to request
     req.user = user;
+
     next();
   } catch (err) {
     console.error("JWT verification failed:", err.message);

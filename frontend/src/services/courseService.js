@@ -51,4 +51,14 @@ export const courseService = {
     axios.get(`${API_URL}/grades/me`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  // Enrolled Students
+  getCourseEnrolledStudents: (courseId, token) =>
+    axios.get(`${API_URL}/${courseId}/students`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  removeStudentFromCourse: (courseId, studentId, token) =>
+    axios.delete(`${API_URL}/${courseId}/students/${studentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

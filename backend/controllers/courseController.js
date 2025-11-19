@@ -9,6 +9,8 @@ import {
   gradeStudentHelper,
   getCourseGradesHelper,
   getStudentGradesHelper,
+  getCourseEnrolledStudentsHelper,
+  removeStudentFromCourseHelper,
 } from "../helpers/courseHelpers.js";
 
 import { auditHelper } from "../helpers/auditHelpers.js";
@@ -474,6 +476,102 @@ export async function getStudentGradesController(req, res) {
       action: "GET_STUDENT_GRADES_FAILED",
       entityType: "GRADE",
       metadata: { studentId, error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
+
+// ----------------------
+// STUDENT ENROLLMENT RETRIEVAL
+// ----------------------
+export async function getCourseEnrolledStudentsController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const teacherId = req.user._id;
+  const { courseId } = req.params;
+
+  try {
+    const students = await getCourseEnrolledStudentsHelper(courseId, teacherId);
+
+    // Log successful fetch
+    await auditHelper({
+      req,
+      action: "GET_COURSE_ENROLLED_STUDENTS_SUCCESS",
+      entityType: "ENROLLMENT",
+      metadata: { courseId, teacherId, count: students.length, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
+    return res.status(200).json({ success: true, students });
+  } catch (error) {
+    console.error(error);
+
+    // Log failed fetch
+    await auditHelper({
+      req,
+      action: "GET_COURSE_ENROLLED_STUDENTS_FAILED",
+      entityType: "ENROLLMENT",
+      metadata: { courseId, teacherId, error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
+
+// ----------------------
+// TEACHER REMOVE STUDENT FROM COURSE
+// ----------------------
+export async function removeStudentFromCourseController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const teacherId = req.user._id;
+  const { courseId, studentId } = req.params;
+
+  try {
+    const enrollment = await removeStudentFromCourseHelper(
+      courseId,
+      studentId,
+      teacherId
+    );
+
+    // Log successful removal
+    await auditHelper({
+      req,
+      action: "REMOVE_STUDENT_FROM_COURSE_SUCCESS",
+      entityType: "ENROLLMENT",
+      entityId: enrollment._id,
+      metadata: { courseId, studentId, teacherId, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Student removed from course successfully",
+      enrollment,
+    });
+  } catch (error) {
+    console.error(error);
+
+    // Log failed removal
+    await auditHelper({
+      req,
+      action: "REMOVE_STUDENT_FROM_COURSE_FAILED",
+      entityType: "ENROLLMENT",
+      metadata: {
+        courseId,
+        studentId,
+        teacherId,
+        error: error.message,
+        ip,
+        userAgent,
+      },
       severity: "WARNING",
       status: "FAILURE",
     });

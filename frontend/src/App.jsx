@@ -16,6 +16,8 @@ import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import AdminResetUser from "./pages/admin/AdminResetUser";
 import CreateCourse from "./pages/teacher/CreateCourse";
+import MyCourses from "./pages/teacher/MyCourses";
+import StudentManagement from "./pages/teacher/StudentManagement";
 
 export default function App() {
   return (
@@ -35,6 +37,8 @@ export default function App() {
         <Route path="/account-settings" element={<AccountSettings />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         <Route path="/teacher/courses/new" element={<CreateCourse />} />
+        <Route path="/teacher/courses" element={<MyCourses />} />
+        <Route path="/teacher/students" element={<StudentManagement />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
 
         {/* Redirect root to login */}

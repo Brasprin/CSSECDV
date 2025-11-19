@@ -57,7 +57,12 @@ export default function TeacherDashboard() {
           </div>
           <div className={styles.cardBody}>
             <p className={styles.placeholder}>Your courses will appear here.</p>
-            <button className={styles.btn}>View Courses</button>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/teacher/courses")}
+            >
+              View Courses
+            </button>
           </div>
         </div>
 
@@ -67,7 +72,12 @@ export default function TeacherDashboard() {
           </div>
           <div className={styles.cardBody}>
             <p>Start teaching by creating a new course for your students.</p>
-            <button className={styles.btn} onClick={() => navigate("/teacher/courses/new")}>Create Course</button>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/teacher/courses/new")}
+            >
+              Create Course
+            </button>
           </div>
         </div>
 
@@ -79,7 +89,12 @@ export default function TeacherDashboard() {
             <p className={styles.placeholder}>
               Manage your course students and enrollments here.
             </p>
-            <button className={styles.btn}>Manage Students</button>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/teacher/students")}
+            >
+              Manage Students
+            </button>
           </div>
         </div>
 

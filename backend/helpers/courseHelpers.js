@@ -59,7 +59,23 @@ export async function createCourseHelper(courseData, teacherId) {
 }
 
 export async function getTeacherCoursesHelper(teacherId) {
-  return await Course.find({ teacher: teacherId });
+  const courses = await Course.find({ teacher: teacherId });
+  
+  // Fetch enrollment count for each course
+  const coursesWithEnrollment = await Promise.all(
+    courses.map(async (course) => {
+      const enrolledCount = await Enrollment.countDocuments({
+        courseId: course._id,
+        status: "ENROLLED",
+      });
+      return {
+        ...course.toObject(),
+        enrolledCount,
+      };
+    })
+  );
+  
+  return coursesWithEnrollment;
 }
 
 export async function getCourseByIdHelper(courseId, teacherId) {
@@ -198,4 +214,47 @@ export async function getCourseGradesHelper(courseId, teacherId) {
 
 export async function getStudentGradesHelper(studentId) {
   return await Grade.find({ studentId });
+}
+
+// ----------------------
+// STUDENT ENROLLMENT RETRIEVAL
+// ----------------------
+export async function getCourseEnrolledStudentsHelper(courseId, teacherId) {
+  const course = await Course.findById(courseId);
+  if (!course) throw new Error("Course not found");
+  if (course.teacher.toString() !== teacherId.toString()) {
+    throw new Error("Unauthorized: Only the course teacher can view enrollments");
+  }
+
+  const enrollments = await Enrollment.find({
+    courseId,
+    status: "ENROLLED",
+  }).populate("student", "email firstName lastName");
+
+  return enrollments.map((enrollment) => ({
+    enrollmentId: enrollment._id,
+    studentId: enrollment.student._id,
+    email: enrollment.student.email,
+    firstName: enrollment.student.firstName,
+    lastName: enrollment.student.lastName,
+    enrolledAt: enrollment.createdAt,
+  }));
+}
+
+// ----------------------
+// TEACHER REMOVE STUDENT FROM COURSE
+// ----------------------
+export async function removeStudentFromCourseHelper(courseId, studentId, teacherId) {
+  const course = await Course.findById(courseId);
+  if (!course) throw new Error("Course not found");
+  if (course.teacher.toString() !== teacherId.toString()) {
+    throw new Error("Unauthorized: Only the course teacher can remove students");
+  }
+
+  const enrollment = await Enrollment.findOne({ courseId, student: studentId });
+  if (!enrollment) throw new Error("Student not enrolled in this course");
+
+  enrollment.status = "DROPPED";
+  enrollment.updatedAt = new Date();
+  return await enrollment.save();
 }
