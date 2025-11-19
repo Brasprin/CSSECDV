@@ -67,7 +67,7 @@ export default function TeacherDashboard() {
           </div>
           <div className={styles.cardBody}>
             <p>Start teaching by creating a new course for your students.</p>
-            <button className={styles.btn}>Create Course</button>
+            <button className={styles.btn} onClick={() => navigate("/teacher/courses/new")}>Create Course</button>
           </div>
         </div>
 
@@ -92,21 +92,6 @@ export default function TeacherDashboard() {
               Grade your students and manage their academic performance.
             </p>
             <button className={styles.btn}>Grade Students</button>
-          </div>
-        </div>
-
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Active Courses</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Total Students</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Pending Grades</div>
           </div>
         </div>
       </div>

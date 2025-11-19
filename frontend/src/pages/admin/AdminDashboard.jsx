@@ -122,25 +122,6 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
-
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Total Users</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Active Sessions</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>System Events</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Failed Logins</div>
-          </div>
-        </div>
       </div>
     </Layout>
   );

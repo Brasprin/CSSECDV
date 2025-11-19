@@ -74,21 +74,6 @@ export default function StudentDashboard() {
             <button className={styles.btn}>View Grades</button>
           </div>
         </div>
-
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Courses Enrolled</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>-</div>
-            <div className={styles.statLabel}>Average Grade</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
-            <div className={styles.statLabel}>Assignments</div>
-          </div>
-        </div>
       </div>
     </Layout>
   );

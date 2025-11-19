@@ -82,63 +82,12 @@
 }
 
 /* ==========================================
-   STATS CONTAINER
-   ========================================== */
-.statsContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-lg);
-  grid-column: 1 / -1;
-}
-
-.statCard {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: var(--spacing-xl);
-  border-radius: var(--radius-lg);
-  text-align: center;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-base);
-}
-
-.statCard:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
-}
-
-.statValue {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-sm);
-}
-
-.statLabel {
-  font-size: var(--font-size-sm);
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ==========================================
    RESPONSIVE DESIGN
    ========================================== */
 @media (max-width: 768px) {
   .dashboardGrid {
     grid-template-columns: 1fr;
     gap: var(--spacing-lg);
-  }
-
-  .statsContainer {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--spacing-md);
-  }
-
-  .statCard {
-    padding: var(--spacing-lg);
-  }
-
-  .statValue {
-    font-size: var(--font-size-3xl);
   }
 }
 
@@ -161,13 +110,5 @@
 
   .cardHeader h3 {
     font-size: var(--font-size-base);
-  }
-
-  .statsContainer {
-    grid-template-columns: 1fr;
-  }
-
-  .statValue {
-    font-size: var(--font-size-2xl);
   }
 }
