@@ -87,7 +87,7 @@ export default function TeacherDashboard() {
           </div>
           <div className={styles.cardBody}>
             <p className={styles.placeholder}>
-              Manage your course students and enrollments here.
+              Manage your course students and enrollments.
             </p>
             <button
               className={styles.btn}
@@ -104,9 +104,31 @@ export default function TeacherDashboard() {
           </div>
           <div className={styles.cardBody}>
             <p className={styles.placeholder}>
-              Grade your students and manage their academic performance.
+              Grade and manage enrolled students.
             </p>
-            <button className={styles.btn}>Grade Students</button>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/teacher/grade")}
+            >
+              Grade Students
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>Account Settings</h3>
+          </div>
+          <div className={styles.cardBody}>
+            <p className={styles.placeholder}>
+              Manage profile, password, or delete account.
+            </p>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/account-settings")}
+            >
+              Account Settings
+            </button>
           </div>
         </div>
       </div>

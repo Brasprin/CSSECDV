@@ -33,6 +33,7 @@ export default function AccountSettings() {
   const [activeTab, setActiveTab] = useState("profile");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [successType, setSuccessType] = useState(""); // "profile" or "password"
   const [securityQuestionPool, setSecurityQuestionPool] = useState([]);
 
   // Profile form state
@@ -134,6 +135,12 @@ export default function AccountSettings() {
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setSuccess("Profile updated successfully!");
+        setSuccessType("profile");
+        // Auto-clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccess("");
+          setSuccessType("");
+        }, 3000);
       }
     } catch (err) {
       setError(err.response?.data?.error || "Failed to update profile");
@@ -198,7 +205,8 @@ export default function AccountSettings() {
       );
 
       if (response.data.success) {
-        setSuccess("Password updated. Please log in again…");
+        setSuccess("Redirecting to login...");
+        setSuccessType("password");
         setPasswordLoading(false);
 
         // Clear tokens and redirect after 3 seconds
@@ -206,6 +214,8 @@ export default function AccountSettings() {
           localStorage.removeItem("user");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          setSuccess(""); // Clear success message before navigation
+          setSuccessType("");
           navigate("/login", {
             state: { message: "Password changed successfully! Please log in." },
           });
@@ -255,8 +265,8 @@ export default function AccountSettings() {
 
   return (
     <Layout user={user}>
-      {/* Success Popup Modal */}
-      {success && (
+      {/* Success Popup Modal - Only for password changes */}
+      {success && successType === "password" && (
         <div className={settingsStyles.successOverlay}>
           <div className={settingsStyles.successContent}>
             <div className={settingsStyles.successIcon}>✓</div>
@@ -278,7 +288,7 @@ export default function AccountSettings() {
 
           {/* Error/Success Messages */}
           {error && <div className={styles.errorAlert}>{error}</div>}
-          {success && (
+          {success && successType === "profile" && (
             <div className={settingsStyles.successAlert}>{success}</div>
           )}
 

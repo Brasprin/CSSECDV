@@ -99,7 +99,15 @@ export default function MyCourses() {
         token
       );
       const updated = data?.course;
-      setCourses((prev) => prev.map((c) => (c._id === courseId ? updated : c)));
+      
+      // Preserve enrolledCount from the original course
+      setCourses((prev) =>
+        prev.map((c) =>
+          c._id === courseId
+            ? { ...updated, enrolledCount: c.enrolledCount }
+            : c
+        )
+      );
       setEditId(null);
       setEdits({});
     } catch (e) {

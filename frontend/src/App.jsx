@@ -18,6 +18,7 @@ import AdminResetUser from "./pages/admin/AdminResetUser";
 import CreateCourse from "./pages/teacher/CreateCourse";
 import MyCourses from "./pages/teacher/MyCourses";
 import StudentManagement from "./pages/teacher/StudentManagement";
+import GradeStudents from "./pages/teacher/GradeStudents";
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/teacher/courses/new" element={<CreateCourse />} />
         <Route path="/teacher/courses" element={<MyCourses />} />
         <Route path="/teacher/students" element={<StudentManagement />} />
+        <Route path="/teacher/grade" element={<GradeStudents />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
 
         {/* Redirect root to login */}

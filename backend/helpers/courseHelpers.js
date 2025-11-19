@@ -60,7 +60,7 @@ export async function createCourseHelper(courseData, teacherId) {
 
 export async function getTeacherCoursesHelper(teacherId) {
   const courses = await Course.find({ teacher: teacherId });
-  
+
   // Fetch enrollment count for each course
   const coursesWithEnrollment = await Promise.all(
     courses.map(async (course) => {
@@ -74,7 +74,7 @@ export async function getTeacherCoursesHelper(teacherId) {
       };
     })
   );
-  
+
   return coursesWithEnrollment;
 }
 
@@ -154,7 +154,9 @@ export async function dropStudentHelper(courseId, studentId) {
 export async function finishEnrollmentHelper(courseId, studentId) {
   const enrollment = await Enrollment.findOne({ courseId, student: studentId });
   if (!enrollment) throw new Error("Student not enrolled in this course");
-  if (enrollment.status !== "ENROLLED") {
+
+  // Allow marking as FINISHED if status is ENROLLED or already FINISHED (for regrading)
+  if (enrollment.status !== "ENROLLED" && enrollment.status !== "FINISHED") {
     throw new Error(`Cannot finish: student status is ${enrollment.status}`);
   }
 
@@ -223,32 +225,44 @@ export async function getCourseEnrolledStudentsHelper(courseId, teacherId) {
   const course = await Course.findById(courseId);
   if (!course) throw new Error("Course not found");
   if (course.teacher.toString() !== teacherId.toString()) {
-    throw new Error("Unauthorized: Only the course teacher can view enrollments");
+    throw new Error(
+      "Unauthorized: Only the course teacher can view enrollments"
+    );
   }
 
   const enrollments = await Enrollment.find({
     courseId,
-    status: "ENROLLED",
+    status: { $in: ["ENROLLED", "FINISHED"] },
   }).populate("student", "email firstName lastName");
 
-  return enrollments.map((enrollment) => ({
-    enrollmentId: enrollment._id,
-    studentId: enrollment.student._id,
-    email: enrollment.student.email,
-    firstName: enrollment.student.firstName,
-    lastName: enrollment.student.lastName,
-    enrolledAt: enrollment.createdAt,
-  }));
+  const result = enrollments
+    .filter((enrollment) => enrollment.student) // Filter out null student references
+    .map((enrollment) => ({
+      enrollmentId: enrollment._id,
+      studentId: enrollment.student._id,
+      email: enrollment.student.email,
+      firstName: enrollment.student.firstName,
+      lastName: enrollment.student.lastName,
+      enrolledAt: enrollment.createdAt,
+    }));
+
+  return result;
 }
 
 // ----------------------
 // TEACHER REMOVE STUDENT FROM COURSE
 // ----------------------
-export async function removeStudentFromCourseHelper(courseId, studentId, teacherId) {
+export async function removeStudentFromCourseHelper(
+  courseId,
+  studentId,
+  teacherId
+) {
   const course = await Course.findById(courseId);
   if (!course) throw new Error("Course not found");
   if (course.teacher.toString() !== teacherId.toString()) {
-    throw new Error("Unauthorized: Only the course teacher can remove students");
+    throw new Error(
+      "Unauthorized: Only the course teacher can remove students"
+    );
   }
 
   const enrollment = await Enrollment.findOne({ courseId, student: studentId });
