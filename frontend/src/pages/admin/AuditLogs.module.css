@@ -1,0 +1,524 @@
+/* ==========================================
+   AUDIT LOGS PAGE STYLES
+   ========================================== */
+
+.auditContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* ==========================================
+   FILTER SECTION
+   ========================================== */
+.filterSection {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.filterLabel {
+  font-weight: var(--font-weight-semibold);
+  color: var(--neutral-900);
+  font-size: var(--font-size-base);
+}
+
+.filterButtons {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+/* New: Combined row for log type buttons (left) and date dropdown (right) */
+.filterRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+/* New: Date filter group aligned to the right */
+.dateFilterGroup {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* New: Select styling for the date filter */
+.dateSelect {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid var(--neutral-300);
+  background-color: white;
+  color: var(--neutral-700);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.filterBtn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid var(--neutral-300);
+  background-color: white;
+  color: var(--neutral-700);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.filterBtn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background-color: var(--primary-lighter);
+}
+
+.filterBtnActive {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.filterBtnActive:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+/* ==========================================
+   LOGS INFO
+   ========================================== */
+.logsInfo {
+  background-color: var(--neutral-50);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-color);
+}
+
+.logsInfo p {
+  margin-bottom: 0;
+  color: var(--neutral-700);
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================
+   TABLE WRAPPER & STYLES
+   ========================================== */
+.tableWrapper {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow-x: auto;
+}
+
+.logsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.logsTable thead {
+  background-color: var(--neutral-100);
+  border-bottom: 2px solid var(--neutral-300);
+}
+
+.logsTable th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--neutral-900);
+  white-space: nowrap;
+}
+
+.logsTable tbody tr {
+  border-bottom: 1px solid var(--neutral-200);
+  transition: background-color var(--transition-fast);
+}
+
+.logsTable tbody tr:hover {
+  background-color: var(--neutral-50);
+}
+
+.logsTable td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--neutral-700);
+}
+
+/* ==========================================
+   TABLE CELL STYLES
+   ========================================== */
+.timestamp {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  color: var(--neutral-600);
+  white-space: nowrap;
+}
+
+.actor {
+  min-width: 250px;
+}
+
+.actorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.actorName {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.actorFullName {
+  font-weight: var(--font-weight-semibold);
+  color: var(--neutral-900);
+}
+
+.actorEmail {
+  font-size: var(--font-size-xs);
+  color: var(--neutral-500);
+}
+
+.actorId {
+  font-size: var(--font-size-xs);
+  color: var(--neutral-500);
+  font-style: italic;
+}
+
+.role {
+  min-width: 100px;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--secondary-light);
+  color: var(--secondary-dark);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action {
+  min-width: 200px;
+}
+
+.badgeError {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.badgeSuccess {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--success-light);
+  color: var(--success-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.badgeInfo {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--info-light);
+  color: var(--info-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.entityType {
+  min-width: 100px;
+  color: var(--neutral-700);
+}
+
+.severity {
+  min-width: 100px;
+}
+
+.severityCritical {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severityError {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severityWarning {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--warning-light);
+  color: var(--warning-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severityInfo {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--info-light);
+  color: var(--info-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status {
+  min-width: 90px;
+}
+
+.statusSuccess {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--success-light);
+  color: var(--success-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusFailure {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================
+   EMPTY STATE
+   ========================================== */
+.emptyState {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.emptyState p {
+  color: var(--neutral-500);
+  font-size: var(--font-size-base);
+  margin-bottom: 0;
+}
+
+/* ==========================================
+   ERROR ALERT
+   ========================================== */
+.errorAlert {
+  background-color: var(--error-light);
+  color: var(--error-color);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--error-color);
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================
+   LOADING STATE
+   ========================================== */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-size: var(--font-size-lg);
+  color: var(--neutral-600);
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   ========================================== */
+@media (max-width: 1024px) {
+  .logsTable {
+    font-size: var(--font-size-xs);
+  }
+
+  .logsTable th,
+  .logsTable td {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+
+  .timestamp {
+    font-size: var(--font-size-xs);
+  }
+
+  .actor {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filterButtons {
+    flex-direction: column;
+  }
+
+  .filterBtn {
+    width: 100%;
+  }
+
+  .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .logsTable {
+    font-size: var(--font-size-xs);
+    min-width: 800px;
+  }
+
+  .logsTable th,
+  .logsTable td {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .actor {
+    min-width: 180px;
+  }
+
+  .actorEmail {
+    display: none;
+  }
+
+  .timestamp {
+    font-size: var(--font-size-xs);
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auditContainer {
+    gap: var(--spacing-lg);
+  }
+
+  .filterSection {
+    padding: var(--spacing-md);
+  }
+
+  .filterLabel {
+    font-size: var(--font-size-sm);
+  }
+
+  .filterButtons {
+    gap: var(--spacing-sm);
+  }
+
+  .filterBtn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-xs);
+  }
+
+  .logsInfo {
+    padding: var(--spacing-md);
+  }
+
+  .logsInfo p {
+    font-size: var(--font-size-xs);
+  }
+
+  .tableWrapper {
+    border-radius: var(--radius-md);
+  }
+
+  .logsTable {
+    font-size: var(--font-size-xs);
+    min-width: 600px;
+  }
+
+  .logsTable th,
+  .logsTable td {
+    padding: var(--spacing-sm);
+  }
+
+  .logsTable th {
+    font-size: var(--font-size-xs);
+  }
+
+  .actor {
+    min-width: 150px;
+  }
+
+  .actorFullName {
+    font-size: var(--font-size-xs);
+  }
+
+  .actorEmail {
+    display: none;
+  }
+
+  .timestamp {
+    font-size: var(--font-size-xs);
+    min-width: 120px;
+  }
+
+  .roleBadge,
+  .badgeError,
+  .badgeSuccess,
+  .badgeInfo,
+  .severityCritical,
+  .severityError,
+  .severityWarning,
+  .severityInfo,
+  .statusSuccess,
+  .statusFailure {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .emptyState {
+    padding: var(--spacing-2xl) var(--spacing-md);
+  }
+
+  .emptyState p {
+    font-size: var(--font-size-sm);
+  }
+}

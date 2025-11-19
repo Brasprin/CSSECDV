@@ -9,25 +9,24 @@ import {
 
 export async function getAuditsController(req, res) {
   try {
-    // Admin-only access
-    if (req.user.role !== "ADMIN") {
-      return res
-        .status(403)
-        .json({ success: false, error: "Access denied: Admins only" });
-    }
-
     const { logType = "BOTH" } = req.query;
     const logs = await getAuditLogs({ logType: logType.toUpperCase() });
 
     // Enrich logs
     const enrichedLogs = await Promise.all(
       logs.map(async (log) => {
-        let enrichedLog = { ...log };
+        let enrichedLog = typeof log.toObject === "function" ? log.toObject() : { ...log };
 
         // Actor metadata
         if (log.actorId) {
           const userMeta = await getUserMetadata(log.actorId);
           enrichedLog.actorMeta = userMeta || { id: log.actorId };
+        } else if (log.entityType === "USER" && log.entityId) {
+          // Fallback: for security events (e.g., LOGIN_SUCCESS) actorId may be null but entityId points to the user
+          const userMeta = await getUserMetadata(log.entityId);
+          if (userMeta) {
+            enrichedLog.actorMeta = userMeta;
+          }
         }
 
         // Entity metadata based on entityType

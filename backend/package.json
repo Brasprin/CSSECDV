@@ -1,7 +1,7 @@
 {
   "name": "cssecdv-backend",
   "version": "1.0.0",
-  "description": "Backend for SecDEV project",
+  "description": "Backend for CSSECDV project",
   "main": "app.js",
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
     "bcrypt": "^5.1.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
+    "cssecdv": "file:..",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.1",

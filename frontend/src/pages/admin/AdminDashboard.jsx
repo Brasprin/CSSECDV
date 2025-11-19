@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
 import styles from "./AdminDashboard.module.css";
 
+const handleNavigate = (navigate, path) => {
+  navigate(path);
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -71,7 +75,12 @@ export default function AdminDashboard() {
             <p className={styles.placeholder}>
               View system audit logs and user activities.
             </p>
-            <button className={styles.btn}>View Logs</button>
+            <button
+              className={styles.btn}
+              onClick={() => handleNavigate(navigate, "/admin/audit-logs")}
+            >
+              View Logs
+            </button>
           </div>
         </div>
 

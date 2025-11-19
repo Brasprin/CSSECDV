@@ -8,7 +8,7 @@ export default function Layout({ children, title, user }) {
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      
+
       if (refreshToken) {
         // Call the logout API to revoke the refresh token on the backend
         await authService.logout(refreshToken);
@@ -21,7 +21,7 @@ export default function Layout({ children, title, user }) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
-      
+
       // Redirect to login
       navigate("/login");
     }
@@ -33,7 +33,7 @@ export default function Layout({ children, title, user }) {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-            <h1>SecDEV</h1>
+            <h1>Animosys</h1>
           </div>
 
           <div className={styles.headerRight}>
@@ -61,7 +61,7 @@ export default function Layout({ children, title, user }) {
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <p>&copy; 2024 SecDEV. All rights reserved.</p>
+        <p>&copy; 2025 CSSECDV. All rights reserved.</p>
       </footer>
     </div>
   );
