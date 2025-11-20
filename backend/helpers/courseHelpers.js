@@ -105,6 +105,48 @@ export async function deleteCourseHelper(courseId, teacherId) {
 }
 
 // ----------------------
+// ALL COURSES FOR BROWSING (optionally mark student's enrollment)
+// ----------------------
+export async function getAllCoursesHelper(studentId = null) {
+  const courses = await Course.find({});
+
+  let statusMap = null;
+  if (studentId) {
+    const enrollments = await Enrollment.find({
+      student: studentId,
+      courseId: { $in: courses.map((c) => c._id) },
+    }).select("courseId status");
+    statusMap = new Map(
+      enrollments.map((e) => [String(e.courseId), e.status])
+    );
+  }
+
+  const coursesWithMeta = await Promise.all(
+    courses.map(async (course) => {
+      const enrolledCount = await Enrollment.countDocuments({
+        courseId: course._id,
+        status: "ENROLLED",
+      });
+      const base = {
+        ...course.toObject(),
+        enrolledCount,
+      };
+      if (statusMap) {
+        const studentStatus = statusMap.get(String(course._id)) || null;
+        return {
+          ...base,
+          studentStatus,
+          enrolled: studentStatus === "ENROLLED",
+        };
+      }
+      return base;
+    })
+  );
+
+  return coursesWithMeta;
+}
+
+// ----------------------
 // ENROLLMENT MANAGEMENT
 // ----------------------
 export async function enrollStudentHelper(courseId, studentId) {

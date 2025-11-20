@@ -11,9 +11,47 @@ import {
   getStudentGradesHelper,
   getCourseEnrolledStudentsHelper,
   removeStudentFromCourseHelper,
+  getAllCoursesHelper,
 } from "../helpers/courseHelpers.js";
 
 import { auditHelper } from "../helpers/auditHelpers.js";
+
+// ----------------------
+// BROWSE ALL COURSES (Student)
+// ----------------------
+export async function getAllCoursesController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const studentId = req.user._id;
+
+  try {
+    const courses = await getAllCoursesHelper(studentId);
+
+    await auditHelper({
+      req,
+      action: "GET_ALL_COURSES_SUCCESS",
+      entityType: "COURSE",
+      metadata: { count: courses.length, studentId, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
+    return res.status(200).json({ success: true, courses });
+  } catch (error) {
+    console.error(error);
+
+    await auditHelper({
+      req,
+      action: "GET_ALL_COURSES_FAILED",
+      entityType: "COURSE",
+      metadata: { error: error.message, studentId, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
 
 // ----------------------
 // COURSE MANAGEMENT
@@ -514,6 +552,46 @@ export async function getCourseEnrolledStudentsController(req, res) {
     await auditHelper({
       req,
       action: "GET_COURSE_ENROLLED_STUDENTS_FAILED",
+      entityType: "ENROLLMENT",
+      metadata: { courseId, teacherId, error: error.message, ip, userAgent },
+      severity: "WARNING",
+      status: "FAILURE",
+    });
+
+    return res.status(400).json({ success: false, error: error.message });
+  }
+}
+
+// ----------------------
+// GET ALL COURSE STUDENTS (including FINISHED)
+// ----------------------
+export async function getAllCourseStudentsController(req, res) {
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
+  const teacherId = req.user._id;
+  const { courseId } = req.params;
+
+  try {
+    const students = await getAllCourseStudentsHelper(courseId, teacherId);
+
+    // Log successful fetch
+    await auditHelper({
+      req,
+      action: "GET_ALL_COURSE_STUDENTS_SUCCESS",
+      entityType: "ENROLLMENT",
+      metadata: { courseId, teacherId, count: students.length, ip, userAgent },
+      severity: "INFO",
+      status: "SUCCESS",
+    });
+
+    return res.status(200).json({ success: true, students });
+  } catch (error) {
+    console.error(error);
+
+    // Log failed fetch
+    await auditHelper({
+      req,
+      action: "GET_ALL_COURSE_STUDENTS_FAILED",
       entityType: "ENROLLMENT",
       metadata: { courseId, teacherId, error: error.message, ip, userAgent },
       severity: "WARNING",

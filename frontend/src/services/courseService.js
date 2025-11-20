@@ -27,6 +27,8 @@ export const courseService = {
     }),
 
   // Student
+  getAllCourses: (token) =>
+    axios.get(API_URL, { headers: { Authorization: `Bearer ${token}` } }),
   enrollCourse: (courseId, token) =>
     axios.post(
       `${API_URL}/${courseId}/enroll`,

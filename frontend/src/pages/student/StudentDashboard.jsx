@@ -77,7 +77,12 @@ export default function StudentDashboard() {
             <p className={styles.placeholder}>
               See all the courses you’re currently enrolled in.
             </p>
-            <button className={styles.btn}>View Courses</button>
+            <button
+              className={styles.btn}
+              onClick={() => navigate("/student/my-courses")}
+            >
+              View Courses
+            </button>
           </div>
         </div>
 

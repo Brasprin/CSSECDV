@@ -14,6 +14,9 @@ import UserRole from "./pages/admin/UserRole";
 import AccountSettings from "./pages/shared/AccountSettings";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";
+
+import BrowseCourses from "./pages/student/BrowseCourses";
+import MyStudentCourses from "./pages/student/MyStudentCourses";
 import AdminResetUser from "./pages/admin/AdminResetUser";
 import CreateCourse from "./pages/teacher/CreateCourse";
 import MyCourses from "./pages/teacher/MyCourses";
@@ -33,7 +36,10 @@ export default function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/audit-logs" element={<AuditLogs />} />
         <Route path="/admin/user-management" element={<UserManagement />} />
-        <Route path="/admin/user-management/:userId/reset-password" element={<AdminResetUser />} />
+        <Route
+          path="/admin/user-management/:userId/reset-password"
+          element={<AdminResetUser />}
+        />
         <Route path="/admin/user-roles" element={<UserRole />} />
         <Route path="/account-settings" element={<AccountSettings />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
@@ -42,6 +48,8 @@ export default function App() {
         <Route path="/teacher/students" element={<StudentManagement />} />
         <Route path="/teacher/grade" element={<GradeStudents />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/browse-courses" element={<BrowseCourses />} />
+        <Route path="/student/my-courses" element={<MyStudentCourses />} />
 
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />

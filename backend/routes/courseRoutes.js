@@ -12,6 +12,7 @@ import {
   getStudentGradesController,
   getCourseEnrolledStudentsController,
   removeStudentFromCourseController,
+  getAllCoursesController,
 } from "../controllers/courseController.js";
 
 import { authenticateJWT } from "../middleware/authMiddleware.js";
@@ -23,6 +24,12 @@ const router = express.Router();
 // ----------------------
 // TEACHER COURSE MANAGEMENT (Protected)
 // ----------------------
+router.get(
+  "/",
+  authenticateJWT,
+  requireStudent,
+  getAllCoursesController
+);
 router.post("/", authenticateJWT, requireTeacher, createCourseController);
 router.get(
   "/teacher",

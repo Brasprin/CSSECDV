@@ -1,0 +1,190 @@
+/* BrowseCourses.module.css - mirrors MyCourses but tailored for student actions */
+
+.container {
+  max-width: 2200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: 1.5rem;
+}
+
+.pageHeaderTitle {
+  font-size: var(--font-size-3xl);
+  color: var(--neutral-900);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 2px solid var(--neutral-300);
+  background-color: white;
+  color: var(--neutral-700);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-decoration: none;
+}
+
+.backButton:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background-color: var(--primary-lighter);
+}
+
+.backButtonIcon {
+  font-size: var(--font-size-base);
+  line-height: 1;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.thead th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--fg-muted, #4b5563);
+  background: #f9fafb;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.tbody td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  vertical-align: middle;
+}
+
+.row:hover {
+  background: #f9fafb;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--surface, #fff);
+  color: var(--fg-default, #111827);
+  cursor: pointer;
+}
+
+.btnPrimary {
+  background: var(--primary, #2563eb);
+  color: #fff;
+  border-color: transparent;
+}
+
+.loading,
+.error {
+  margin: 1rem 0;
+}
+
+.loading {
+  color: #6b7280;
+}
+.error {
+  color: #b91c1c;
+}
+
+.empty {
+  padding: 1rem;
+  color: #6b7280;
+}
+
+.capacityDisplay {
+  font-weight: 500;
+  color: var(--fg-default, #111827);
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(37, 99, 235, 0.05);
+  border-radius: 4px;
+  transition: all var(--transition-base);
+}
+
+.capacityFull {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  font-weight: 600;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.badgeOpen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1e3a8a;
+}
+
+.badgeClosed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  background: rgba(107, 114, 128, 0.15);
+  color: #374151;
+}
+
+.policyAllowedActive {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid #16a34a;
+  color: #065f46;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.policyNotAllowedActive {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid #dc2626;
+  color: #7f1d1d;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.policyDotAllowed,
+.policyDotNotAllowed {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.policyDotAllowed {
+  background: #16a34a;
+}
+
+.policyDotNotAllowed {
+  background: #dc2626;
+}
