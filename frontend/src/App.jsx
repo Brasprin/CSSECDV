@@ -22,6 +22,7 @@ import CreateCourse from "./pages/teacher/CreateCourse";
 import MyCourses from "./pages/teacher/MyCourses";
 import StudentManagement from "./pages/teacher/StudentManagement";
 import GradeStudents from "./pages/teacher/GradeStudents";
+import MyGrades from "./pages/student/MyGrades";
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/student/browse-courses" element={<BrowseCourses />} />
         <Route path="/student/my-courses" element={<MyStudentCourses />} />
+        <Route path="/student/my-grades" element={<MyGrades />} />
 
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
