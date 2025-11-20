@@ -183,11 +183,11 @@ export async function handleLogin(user, password, req) {
 
   // Check if account is currently locked
   if (user.lockUntil && user.lockUntil > now) {
-    const remaining = Math.ceil((user.lockUntil - now) / 1000); // seconds remaining
     return {
       success: false,
-      error: `Account is temporarily locked. Try again in ${remaining} seconds.`,
+      error: "Account is temporarily locked. Try again later.",
       attemptsRemaining: 0,
+      lockUntil: user.lockUntil,
     };
   }
 

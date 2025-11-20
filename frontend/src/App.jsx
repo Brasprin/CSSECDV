@@ -24,44 +24,194 @@ import MyCourses from "./pages/teacher/MyCourses";
 import StudentManagement from "./pages/teacher/StudentManagement";
 import GradeStudents from "./pages/teacher/GradeStudents";
 import MyGrades from "./pages/student/MyGrades";
+import ErrorBoundary from "./components/ErrorBoundary";
+import ErrorPage from "./pages/shared/ErrorPage";
+import { RequireAuth, RequireRole } from "./components/RouteGuards";
 
 export default function App() {
   return (
     <Router>
-      <Routes>
+      <ErrorBoundary>
+        <Routes>
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Dashboard Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/audit-logs" element={<AuditLogs />} />
-        <Route path="/admin/user-management" element={<UserManagement />} />
+        {/* Dashboard Routes with guards */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["ADMIN"]}>
+                <AdminDashboard />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/audit-logs"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["ADMIN"]}>
+                <AuditLogs />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/user-management"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["ADMIN"]}>
+                <UserManagement />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
         <Route
           path="/admin/user-management/:userId/reset-password"
-          element={<AdminResetUser />}
+          element={
+            <RequireAuth>
+              <RequireRole roles={["ADMIN"]}>
+                <AdminResetUser />
+              </RequireRole>
+            </RequireAuth>
+          }
         />
-        <Route path="/admin/user-roles" element={<UserRole />} />
-        <Route path="/admin/create-account" element={<CreateAccount />} />
+        <Route
+          path="/admin/user-roles"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["ADMIN"]}>
+                <UserRole />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/create-account"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["ADMIN"]}>
+                <CreateAccount />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
 
-        <Route path="/account-settings" element={<AccountSettings />} />
-        <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-        <Route path="/teacher/courses/new" element={<CreateCourse />} />
-        <Route path="/teacher/courses" element={<MyCourses />} />
-        <Route path="/teacher/students" element={<StudentManagement />} />
-        <Route path="/teacher/grade" element={<GradeStudents />} />
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/student/browse-courses" element={<BrowseCourses />} />
-        <Route path="/student/my-courses" element={<MyStudentCourses />} />
-        <Route path="/student/my-grades" element={<MyGrades />} />
+        <Route
+          path="/account-settings"
+          element={
+            <RequireAuth>
+              {/* Any authenticated user */}
+              <AccountSettings />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/teacher/dashboard"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["TEACHER"]}>
+                <TeacherDashboard />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/teacher/courses/new"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["TEACHER"]}>
+                <CreateCourse />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/teacher/courses"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["TEACHER"]}>
+                <MyCourses />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/teacher/students"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["TEACHER"]}>
+                <StudentManagement />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/teacher/grade"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["TEACHER"]}>
+                <GradeStudents />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/student/dashboard"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["STUDENT"]}>
+                <StudentDashboard />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/student/browse-courses"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["STUDENT"]}>
+                <BrowseCourses />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/student/my-courses"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["STUDENT"]}>
+                <MyStudentCourses />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/student/my-grades"
+          element={
+            <RequireAuth>
+              <RequireRole roles={["STUDENT"]}>
+                <MyGrades />
+              </RequireRole>
+            </RequireAuth>
+          }
+        />
 
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
+        {/* Generic error page route */}
+        <Route path="/error" element={<ErrorPage />} />
+
         {/* 404 Fallback */}
-        <Route path="*" element={<div>404 - Page Not Found</div>} />
-      </Routes>
+        <Route path="*" element={<ErrorPage />} />
+        </Routes>
+      </ErrorBoundary>
     </Router>
   );
 }

@@ -1,0 +1,113 @@
+/* ==========================================
+   ERROR PAGE STYLES (dedicated module)
+   Uses design tokens from global.css
+   ========================================== */
+
+/* Container & Card */
+.settingsContainer {
+  /* Center card while allowing natural page scroll */
+  display: flex;
+  align-items: flex-start; /* start so tall content grows downward */
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-md); /* top/bottom breathing room */
+  width: 100%;
+  /* Remove forced viewport height so body can scroll */
+}
+
+.settingsCard {
+  background-color: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  width: 100%;
+  max-width: 700px;
+  padding: var(--spacing-3xl);
+  animation: slideUp 0.5s ease-out;
+  /* Let the page scroll instead of the card taking full viewport */
+  max-height: none;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--neutral-900);
+  margin-bottom: var(--spacing-sm);
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--neutral-500);
+  margin-bottom: 0;
+}
+
+/* Actions */
+.formRow {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-lg);
+}
+
+.submitButton {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+  max-width: 240px;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  background-color: var(--neutral-300);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .settingsContainer {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  .settingsCard {
+    padding: var(--spacing-xl);
+    max-width: 100%;
+  }
+
+  .title {
+    font-size: var(--font-size-xl);
+  }
+
+  .subtitle {
+    font-size: var(--font-size-sm);
+  }
+}

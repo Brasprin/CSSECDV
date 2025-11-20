@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../../services/authService";
 import styles from "./Login.module.css";
@@ -12,6 +12,43 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lockUntil, setLockUntil] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(0);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!lockUntil) return;
+
+    // Calculate and set initial remaining time immediately
+    const now = new Date();
+    const remaining = Math.ceil((new Date(lockUntil) - now) / 1000);
+
+    if (remaining <= 0) {
+      setLockUntil(null);
+      setRemainingTime(0);
+      setError("");
+      return;
+    }
+
+    setRemainingTime(remaining);
+
+    // Set up interval for subsequent updates
+    const interval = setInterval(() => {
+      const now = new Date();
+      const remaining = Math.ceil((new Date(lockUntil) - now) / 1000);
+
+      if (remaining <= 0) {
+        setLockUntil(null);
+        setRemainingTime(0);
+        setError("");
+        clearInterval(interval);
+      } else {
+        setRemainingTime(remaining);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lockUntil]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,9 +99,17 @@ export default function Login() {
         }
       }
     } catch (err) {
+      const errorData = err.response?.data;
       const errorMessage =
-        err.response?.data?.error || "Login failed. Please try again.";
-      setError(errorMessage);
+        errorData?.error || "Login failed. Please try again.";
+
+      // Check if account is locked
+      if (errorData?.lockUntil) {
+        setLockUntil(errorData.lockUntil);
+        setError(errorMessage);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -82,7 +127,16 @@ export default function Login() {
           <p className={styles.subtitle}>Sign in to your account</p>
         </div>
 
-        {error && <div className={styles.errorAlert}>{error}</div>}
+        {error && (
+          <div className={styles.errorAlert}>
+            <div>{error}</div>
+            {lockUntil && remainingTime > 0 && (
+              <div className={styles.timeRemaining}>
+                Time Remaining: <strong>{remainingTime}s</strong>
+              </div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
@@ -97,7 +151,7 @@ export default function Login() {
               onChange={handleChange}
               placeholder="Enter your email"
               className={styles.input}
-              disabled={loading}
+              disabled={loading || lockUntil}
               autoComplete="email"
             />
           </div>
@@ -115,14 +169,14 @@ export default function Login() {
                 onChange={handleChange}
                 placeholder="Enter your password"
                 className={styles.input}
-                disabled={loading}
+                disabled={loading || lockUntil}
                 autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className={styles.eyeButton}
-                disabled={loading}
+                disabled={loading || lockUntil}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? "Hide" : "Show"}
@@ -133,9 +187,13 @@ export default function Login() {
           <button
             type="submit"
             className={styles.submitButton}
-            disabled={loading}
+            disabled={loading || lockUntil}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading
+              ? "Signing in..."
+              : lockUntil
+              ? "Account Locked"
+              : "Sign In"}
           </button>
         </form>
 

@@ -178,7 +178,7 @@ export async function loginController(req, res) {
     const result = await handleLogin(user, password, req);
 
     if (!result.success) {
-      // Log failed login (wrong password)
+      // Log failed login (wrong password or account locked)
       await auditHelper({
         req,
         action: "LOGIN_FAILED_WRONG_PASSWORD",
@@ -191,7 +191,12 @@ export async function loginController(req, res) {
 
       return res
         .status(401)
-        .json({ success: false, error: "Invalid email or password" });
+        .json({ 
+          success: false, 
+          error: result.error || "Invalid email or password",
+          lockUntil: result.lockUntil,
+          attemptsRemaining: result.attemptsRemaining
+        });
     }
 
     // Log successful login
