@@ -194,21 +194,22 @@ export async function handleLogin(user, password, req) {
   const validPassword = await bcrypt.compare(password, user.passwordHash);
 
   if (!validPassword) {
-    // Increment failed attempts
     user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
     user.lastFailedLoginAt = now;
 
-    // Lock account if max attempts reached
     if (user.failedLoginAttempts >= MAX_ATTEMPTS) {
       user.lockUntil = new Date(now.getTime() + LOCK_TIME);
-      user.failedLoginAttempts = 0; // reset after locking
+      user.failedLoginAttempts = 0;
     }
 
     await user.save();
 
+    const isLock = user.lockUntil && user.lockUntil > new Date();
+
     return {
       success: false,
       attemptsRemaining: Math.max(0, MAX_ATTEMPTS - user.failedLoginAttempts),
+      isLock,
     };
   }
 

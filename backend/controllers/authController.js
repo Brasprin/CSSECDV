@@ -179,24 +179,34 @@ export async function loginController(req, res) {
 
     if (!result.success) {
       // Log failed login (wrong password or account locked)
-      await auditHelper({
-        req,
-        action: "LOGIN_FAILED_WRONG_PASSWORD",
-        entityType: "USER",
-        entityId: user._id,
-        metadata: { email: normalizedEmail, ip, userAgent },
-        severity: "WARNING",
-        status: "FAILURE",
-      });
-
-      return res
-        .status(401)
-        .json({ 
-          success: false, 
-          error: result.error || "Invalid email or password",
-          lockUntil: result.lockUntil,
-          attemptsRemaining: result.attemptsRemaining
+      if (!result.isLock) {
+        await auditHelper({
+          req,
+          action: "LOGIN_FAILED_WRONG_PASSWORD",
+          entityType: "USER",
+          entityId: user._id,
+          metadata: { email: normalizedEmail, ip, userAgent },
+          severity: "WARNING",
+          status: "FAILURE",
         });
+      } else {
+        await auditHelper({
+          req,
+          action: "LOGIN_FAILED_ACCOUNT_LOCKED",
+          entityType: "USER",
+          entityId: user._id,
+          metadata: { email: normalizedEmail, ip, userAgent },
+          severity: "WARNING",
+          status: "FAILURE",
+        });
+      }
+
+      return res.status(401).json({
+        success: false,
+        error: result.error || "Invalid email or password",
+        lockUntil: result.lockUntil,
+        attemptsRemaining: result.attemptsRemaining,
+      });
     }
 
     // Log successful login
@@ -389,12 +399,17 @@ export async function changePasswordController(req, res) {
 // ----------------------
 // GET SECURITY QUESTIONS FOR FORGOT PASSWORD
 // ----------------------
-export async function getSecurityQuestionsForForgotPasswordController(req, res) {
+export async function getSecurityQuestionsForForgotPasswordController(
+  req,
+  res
+) {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ success: false, error: "Email is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Email is required" });
     }
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
