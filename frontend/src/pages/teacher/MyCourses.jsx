@@ -13,6 +13,7 @@ export default function MyCourses() {
   const [editId, setEditId] = useState(null);
   const [edits, setEdits] = useState({});
   const [enrollmentCounts, setEnrollmentCounts] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const token = useMemo(() => localStorage.getItem("accessToken"), []);
 
@@ -99,7 +100,7 @@ export default function MyCourses() {
         token
       );
       const updated = data?.course;
-      
+
       // Preserve enrolledCount from the original course
       setCourses((prev) =>
         prev.map((c) =>
@@ -120,6 +121,25 @@ export default function MyCourses() {
 
   const setField = (name, value) => setEdits((p) => ({ ...p, [name]: value }));
 
+  // Filter courses based on search query
+  const filteredCourses = useMemo(() => {
+    if (!searchQuery.trim()) return courses;
+
+    const query = searchQuery.toLowerCase();
+    return courses.filter((course) => {
+      return (
+        course.code?.toLowerCase().includes(query) ||
+        course.section?.toLowerCase().includes(query) ||
+        course.title?.toLowerCase().includes(query) ||
+        course.status?.toLowerCase().includes(query) ||
+        course.description?.toLowerCase().includes(query) ||
+        String(course.capacity).includes(query) ||
+        String(course.enrolledCount || 0).includes(query) ||
+        (course.droppingAllowed ? "allowed" : "not allowed").includes(query)
+      );
+    });
+  }, [courses, searchQuery]);
+
   if (!user) {
     return <div className={styles.container}>Loading...</div>;
   }
@@ -139,14 +159,19 @@ export default function MyCourses() {
       </div>
       <div className={styles.container}>
         <div className={styles.header}>
-          <div>
-            <button
-              className={styles.btn}
-              onClick={() => navigate("/teacher/courses/new")}
-            >
-              Create Course
-            </button>
-          </div>
+          <button
+            className={styles.btn}
+            onClick={() => navigate("/teacher/courses/new")}
+          >
+            Create Course
+          </button>
+          <input
+            type="text"
+            placeholder="Search by code, section, title, status, capacity, or dropping policy..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
         </div>
 
         {loading && <div className={styles.loading}>Loading...</div>}
@@ -156,7 +181,11 @@ export default function MyCourses() {
           <div className={styles.empty}>No courses found.</div>
         )}
 
-        {!loading && courses.length > 0 && (
+        {!loading && filteredCourses.length === 0 && courses.length > 0 && (
+          <div className={styles.empty}>No courses match your search.</div>
+        )}
+
+        {!loading && filteredCourses.length > 0 && (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead className={styles.thead}>
@@ -172,7 +201,7 @@ export default function MyCourses() {
                 </tr>
               </thead>
               <tbody className={styles.tbody}>
-                {courses.map((c) => {
+                {filteredCourses.map((c) => {
                   const isEditing = editId === c._id;
                   return (
                     <tr key={c._id} className={styles.row}>

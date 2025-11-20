@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
 import { userService } from "../../services/userService";
 import { authService } from "../../services/authService";
-import styles from "../auth/Register.module.css";
-import settingsStyles from "./AccountSettings.module.css";
+import styles from "./AccountSettings.module.css";
 
 const PASSWORD_REQUIREMENTS = [
   { id: "length", label: "Minimum 8 characters", regex: /.{8,}/ },
@@ -254,19 +253,19 @@ export default function AccountSettings() {
     <Layout user={user}>
       {/* Success Popup Modal - Only for password changes */}
       {success && successType === "password" && (
-        <div className={settingsStyles.successOverlay}>
-          <div className={settingsStyles.successContent}>
-            <div className={settingsStyles.successIcon}>✓</div>
-            <h2 className={settingsStyles.successTitle}>
+        <div className={styles.successOverlay}>
+          <div className={styles.successContent}>
+            <div className={styles.successIcon}>✓</div>
+            <h2 className={styles.successTitle}>
               Password Changed Successfully!
             </h2>
-            <p className={settingsStyles.successMessage}>{success}</p>
+            <p className={styles.successMessage}>{success}</p>
           </div>
         </div>
       )}
 
-      <div className={settingsStyles.settingsContainer}>
-        <div className={settingsStyles.settingsCard}>
+      <div className={styles.settingsContainer}>
+        <div className={styles.settingsCard}>
           {/* Header */}
           <div className={styles.header}>
             <h1 className={styles.title}>Account Settings</h1>
@@ -276,14 +275,14 @@ export default function AccountSettings() {
           {/* Error/Success Messages */}
           {error && <div className={styles.errorAlert}>{error}</div>}
           {success && successType === "profile" && (
-            <div className={settingsStyles.successAlert}>{success}</div>
+            <div className={styles.successAlert}>{success}</div>
           )}
 
           {/* Tabs */}
-          <div className={settingsStyles.tabsContainer}>
+          <div className={styles.tabsContainer}>
             <button
-              className={`${settingsStyles.tab} ${
-                activeTab === "profile" ? settingsStyles.tabActive : ""
+              className={`${styles.tab} ${
+                activeTab === "profile" ? styles.tabActive : ""
               }`}
               onClick={() => {
                 setActiveTab("profile");
@@ -294,8 +293,8 @@ export default function AccountSettings() {
               Profile
             </button>
             <button
-              className={`${settingsStyles.tab} ${
-                activeTab === "password" ? settingsStyles.tabActive : ""
+              className={`${styles.tab} ${
+                activeTab === "password" ? styles.tabActive : ""
               }`}
               onClick={() => {
                 setActiveTab("password");
@@ -306,8 +305,8 @@ export default function AccountSettings() {
               Change Password
             </button>
             <button
-              className={`${settingsStyles.tab} ${
-                activeTab === "delete" ? settingsStyles.tabActive : ""
+              className={`${styles.tab} ${
+                activeTab === "delete" ? styles.tabActive : ""
               }`}
               onClick={() => {
                 setActiveTab("delete");
@@ -362,7 +361,7 @@ export default function AccountSettings() {
                   className={styles.input}
                   disabled
                 />
-                <p className={settingsStyles.hint}>Email cannot be changed</p>
+                <p className={styles.hint}>Email cannot be changed</p>
               </div>
 
               <div className={styles.formRow}>
@@ -539,8 +538,8 @@ export default function AccountSettings() {
 
           {/* Delete Account Tab */}
           {activeTab === "delete" && (
-            <div className={settingsStyles.deleteSection}>
-              <div className={settingsStyles.deleteWarning}>
+            <div className={styles.deleteSection}>
+              <div className={styles.deleteWarning}>
                 <h3>Delete Account</h3>
                 <p>
                   This action is permanent and cannot be undone. All your data
@@ -577,7 +576,7 @@ export default function AccountSettings() {
                 </button>
                 <button
                   onClick={handleDeleteAccount}
-                  className={settingsStyles.deleteButton}
+                  className={styles.deleteButton}
                   disabled={deleteLoading || deleteConfirm !== "DELETE"}
                 >
                   {deleteLoading ? "Deleting..." : "Delete Account"}

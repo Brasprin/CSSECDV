@@ -12,6 +12,7 @@ export default function BrowseCourses() {
   const [courses, setCourses] = useState([]);
   const [enrolling, setEnrolling] = useState({});
   const [dropping, setDropping] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const token = useMemo(() => localStorage.getItem("accessToken"), []);
 
@@ -105,6 +106,25 @@ export default function BrowseCourses() {
     }
   };
 
+  // Filter courses based on search query
+  const filteredCourses = useMemo(() => {
+    if (!searchQuery.trim()) return courses;
+
+    const query = searchQuery.toLowerCase();
+    return courses.filter((course) => {
+      return (
+        course.code?.toLowerCase().includes(query) ||
+        course.section?.toLowerCase().includes(query) ||
+        course.title?.toLowerCase().includes(query) ||
+        course.status?.toLowerCase().includes(query) ||
+        course.description?.toLowerCase().includes(query) ||
+        String(course.capacity).includes(query) ||
+        String(course.enrolledCount || 0).includes(query) ||
+        (course.droppingAllowed ? "allowed" : "not allowed").includes(query)
+      );
+    });
+  }, [courses, searchQuery]);
+
   if (!user) {
     return <div className={styles.container}>Loading...</div>;
   }
@@ -124,13 +144,27 @@ export default function BrowseCourses() {
       </div>
 
       <div className={styles.container}>
+        <div className={styles.header}>
+          <input
+            type="text"
+            placeholder="Search by code, section, title, status, capacity, or dropping policy..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+        </div>
+
         {loading && <div className={styles.loading}>Loading...</div>}
         {error && <div className={styles.error}>{error}</div>}
         {!loading && courses.length === 0 && (
           <div className={styles.empty}>No courses to display.</div>
         )}
 
-        {!loading && courses.length > 0 && (
+        {!loading && filteredCourses.length === 0 && courses.length > 0 && (
+          <div className={styles.empty}>No courses match your search.</div>
+        )}
+
+        {!loading && filteredCourses.length > 0 && (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead className={styles.thead}>
@@ -145,7 +179,7 @@ export default function BrowseCourses() {
                 </tr>
               </thead>
               <tbody className={styles.tbody}>
-                {courses.map((c) => {
+                {filteredCourses.map((c) => {
                   const isOpen = c.status === "OPEN";
                   const isFull = (c.enrolledCount || 0) >= (c.capacity || 0);
                   const canEnroll = isOpen && !isFull && !c.enrolled;

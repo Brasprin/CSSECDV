@@ -10,6 +10,7 @@ export default function MyGrades() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [rows, setRows] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const token = useMemo(() => localStorage.getItem("accessToken"), []);
 
@@ -83,6 +84,24 @@ export default function MyGrades() {
     if (token) fetchData();
   }, [token]);
 
+  // Filter rows based on search query
+  const filteredRows = useMemo(() => {
+    if (!searchQuery.trim()) return rows;
+
+    const query = searchQuery.toLowerCase();
+    return rows.filter((row) => {
+      return (
+        row.code?.toLowerCase().includes(query) ||
+        row.section?.toLowerCase().includes(query) ||
+        row.title?.toLowerCase().includes(query) ||
+        row.studentStatus?.toLowerCase().includes(query) ||
+        row.description?.toLowerCase().includes(query) ||
+        String(row.gradeValue || "").toLowerCase().includes(query) ||
+        (row.droppingAllowed ? "allowed" : "not allowed").includes(query)
+      );
+    });
+  }, [rows, searchQuery]);
+
   if (!user) {
     return <div className={styles.container}>Loading...</div>;
   }
@@ -102,13 +121,27 @@ export default function MyGrades() {
       </div>
 
       <div className={styles.container}>
+        <div className={styles.header}>
+          <input
+            type="text"
+            placeholder="Search by code, section, title, enrollment status, grade, or dropping policy..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+        </div>
+
         {loading && <div className={styles.loading}>Loading...</div>}
         {error && <div className={styles.error}>{error}</div>}
         {!loading && rows.length === 0 && (
           <div className={styles.empty}>You have no course records yet.</div>
         )}
 
-        {!loading && rows.length > 0 && (
+        {!loading && filteredRows.length === 0 && rows.length > 0 && (
+          <div className={styles.empty}>No grades match your search.</div>
+        )}
+
+        {!loading && filteredRows.length > 0 && (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead className={styles.thead}>
@@ -123,7 +156,7 @@ export default function MyGrades() {
                 </tr>
               </thead>
               <tbody className={styles.tbody}>
-                {rows.map((c) => {
+                {filteredRows.map((c) => {
                   
                   const enrollmentBadge =
                     c.studentStatus === "ENROLLED" ? (
