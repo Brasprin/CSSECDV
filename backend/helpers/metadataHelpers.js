@@ -47,7 +47,7 @@ export async function getEnrollmentMetadata(enrollmentId) {
 
   const enrollment = await Enrollment.findById(enrollmentId)
     .populate("student", "firstName lastName email")
-    .populate("course", "title code");
+    .populate("courseId", "title code");
 
   if (!enrollment) return null;
 
@@ -59,10 +59,10 @@ export async function getEnrollmentMetadata(enrollmentId) {
           email: enrollment.student.email,
         }
       : null,
-    course: enrollment.course
+    course: enrollment.courseId
       ? {
-          title: enrollment.course.title,
-          code: enrollment.course.code || enrollment.course._id.toString(),
+          title: enrollment.courseId.title,
+          code: enrollment.courseId.code || enrollment.courseId._id.toString(),
         }
       : null,
   };
@@ -72,24 +72,24 @@ export async function getGradeMetadata(gradeId) {
   if (!gradeId) return null;
 
   const grade = await Grade.findById(gradeId)
-    .populate("student", "firstName lastName email")
-    .populate("course", "title code");
+    .populate("studentId", "firstName lastName email")
+    .populate("courseId", "title code");
 
   if (!grade) return null;
 
   return {
     id: grade._id,
     value: grade.value,
-    student: grade.student
+    student: grade.studentId
       ? {
-          name: `${grade.student.firstName} ${grade.student.lastName}`,
-          email: grade.student.email,
+          name: `${grade.studentId.firstName} ${grade.studentId.lastName}`,
+          email: grade.studentId.email,
         }
       : null,
-    course: grade.course
+    course: grade.courseId
       ? {
-          title: grade.course.title,
-          code: grade.course.code || grade.course._id.toString(),
+          title: grade.courseId.title,
+          code: grade.courseId.code || grade.courseId._id.toString(),
         }
       : null,
   };

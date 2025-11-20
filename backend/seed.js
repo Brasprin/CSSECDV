@@ -5,6 +5,7 @@ import User from "./models/User.js";
 import Course from "./models/Course.js";
 import Enrollment from "./models/Enrollment.js";
 import Grade from "./models/Grade.js";
+import Audit from "./models/Audit.js";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ const seed = async () => {
     await Course.deleteMany({});
     await Enrollment.deleteMany({});
     await Grade.deleteMany({});
+    await Audit.deleteMany({});
     console.log("Old data cleared.");
 
     // 2. Hash passwords

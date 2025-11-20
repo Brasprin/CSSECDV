@@ -385,9 +385,6 @@ export async function changePasswordController(req, res) {
 // GET SECURITY QUESTIONS FOR FORGOT PASSWORD
 // ----------------------
 export async function getSecurityQuestionsForForgotPasswordController(req, res) {
-  const ip = req.ip;
-  const userAgent = req.headers["user-agent"];
-
   try {
     const { email } = req.body;
 
@@ -398,15 +395,6 @@ export async function getSecurityQuestionsForForgotPasswordController(req, res) 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
-      // Log failed attempt
-      await auditHelper({
-        req,
-        action: "GET_SECURITY_QUESTIONS_FAILED_USER_NOT_FOUND",
-        entityType: "USER",
-        metadata: { email, ip, userAgent },
-        severity: "WARNING",
-        status: "FAILURE",
-      });
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
@@ -421,16 +409,6 @@ export async function getSecurityQuestionsForForgotPasswordController(req, res) 
     });
   } catch (error) {
     console.error(error);
-
-    await auditHelper({
-      req,
-      action: "GET_SECURITY_QUESTIONS_FAILED_SERVER_ERROR",
-      entityType: "USER",
-      metadata: { error: error.message, ip, userAgent },
-      severity: "CRITICAL",
-      status: "FAILURE",
-    });
-
     return res
       .status(500)
       .json({ success: false, error: "Failed to retrieve security questions" });
