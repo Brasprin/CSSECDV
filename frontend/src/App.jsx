@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AuditLogs from "./pages/admin/AuditLogs";
 import UserManagement from "./pages/admin/UserManagement";
 import UserRole from "./pages/admin/UserRole";
+import CreateAccount from "./pages/admin/CreateAccount";
 import AccountSettings from "./pages/shared/AccountSettings";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -42,6 +43,8 @@ export default function App() {
           element={<AdminResetUser />}
         />
         <Route path="/admin/user-roles" element={<UserRole />} />
+        <Route path="/admin/create-account" element={<CreateAccount />} />
+
         <Route path="/account-settings" element={<AccountSettings />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         <Route path="/teacher/courses/new" element={<CreateCourse />} />

@@ -95,12 +95,12 @@ const seed = async () => {
       {
         student: student1._id,
         courseId: createdCourses[0]._id,
-        status: "ENROLLED",
+        status: "FINISHED",
       },
       {
         student: student2._id,
         courseId: createdCourses[0]._id,
-        status: "ENROLLED",
+        status: "FINISHED",
       },
       {
         student: student1._id,

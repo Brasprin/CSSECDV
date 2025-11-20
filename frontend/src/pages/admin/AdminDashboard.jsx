@@ -108,6 +108,23 @@ export default function AdminDashboard() {
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
+            <h3>Create Account</h3>
+          </div>
+          <div className={styles.cardBody}>
+            <p className={styles.placeholder}>
+              Create new user accounts with specific roles.
+            </p>
+            <button
+              className={styles.btn}
+              onClick={() => handleNavigate(navigate, "/admin/create-account")}
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
             <h3>Account Settings</h3>
           </div>
           <div className={styles.cardBody}>
