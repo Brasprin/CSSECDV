@@ -176,9 +176,7 @@ export async function loginController(req, res) {
         status: "FAILURE",
       });
 
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid email or password" });
+      return res.status(401).json({ success: false, error: "Invalid email or password" });
     }
 
     const result = await handleLogin(user, password, req);
