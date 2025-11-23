@@ -403,7 +403,10 @@ export async function changePassword(
     user.passwordHash,
     ...(user.passwordHistory || []),
   ].slice(0, PASSWORD_HISTORY_LIMIT);
-  user.passwordHash = passwordHash;
+  // Add configurable salt rounds for bcrypt
+  const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
+  const salt = await bcrypt.genSalt(SALT_ROUNDS);
+  user.passwordHash = await bcrypt.hash(newPassword, salt);
   user.passwordChangedAt = now;
   await user.save();
 

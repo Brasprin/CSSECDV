@@ -16,6 +16,9 @@ import {
 
 import { auditHelper } from "../helpers/auditHelpers.js";
 
+// Configurable salt rounds for bcrypt
+const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
+
 export function getSecurityQuestionPool() {
   return SECURITY_QUESTION_POOL;
 }
@@ -104,12 +107,15 @@ export async function registerController(req, res) {
         .json({ success: false, error: secQValidation.error });
     }
 
+    const salt = await bcrypt.genSalt(SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create user
     const newUser = new User({
       email: email.toLowerCase().trim(),
       firstName,
       lastName,
-      passwordHash: await bcrypt.hash(password, 10),
+      passwordHash: hashedPassword,
       securityQuestions: secQValidation.securityQuestions,
     });
 
