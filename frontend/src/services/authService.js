@@ -11,7 +11,24 @@ export const authService = {
   validatePassword: (password) =>
     axios.post(`${API_URL}/validate-password`, { password }),
   register: (data) => axios.post(`${API_URL}/register`, data),
-  login: (data) => axios.post(`${API_URL}/login`, data),
+  
+  // [AUDIT MODIFICATION]
+  login: async (data) => {
+    const response = await axios.post(`${API_URL}/login`, data);
+    
+    // Intercept response to store audit timestamps
+    if (response.data) {
+      if (response.data.lastLogin) {
+        localStorage.setItem("lastLoginAudit", response.data.lastLogin);
+      }
+      if (response.data.lastFailedLogin) {
+        localStorage.setItem("lastFailedLoginAudit", response.data.lastFailedLogin);
+      }
+    }
+
+    return response;
+  },
+
   logout: (refreshToken) => axios.post(`${API_URL}/logout`, { refreshToken }),
   refreshToken: (refreshToken) =>
     axios.post(`${API_URL}/refresh-token`, { refreshToken }),

@@ -154,7 +154,7 @@ export async function registerController(req, res) {
 }
 
 // ----------------------
-// LOGIN
+// LOGIN (MODIFIED)
 // ----------------------
 export async function loginController(req, res) {
   const ip = req.ip;
@@ -178,6 +178,12 @@ export async function loginController(req, res) {
 
       return res.status(401).json({ success: false, error: "Invalid email or password" });
     }
+
+    // [AUDIT MODIFICATION START]
+    // Capture timestamps BEFORE they are updated by handleLogin
+    const previousLastLogin = user.lastLoginAt;
+    const lastFailedLogin = user.lastFailedLoginAt;
+    // [AUDIT MODIFICATION END]
 
     const result = await handleLogin(user, password, req);
 
@@ -224,7 +230,15 @@ export async function loginController(req, res) {
       status: "SUCCESS",
     });
 
-    return res.status(200).json(result);
+    // [AUDIT MODIFICATION START]
+    // Send both timestamps back to the client
+    return res.status(200).json({
+      ...result,
+      lastLogin: previousLastLogin,
+      lastFailedLogin: lastFailedLogin
+    });
+    // [AUDIT MODIFICATION END]
+
   } catch (error) {
     console.error(error);
 
@@ -241,6 +255,7 @@ export async function loginController(req, res) {
     return res.status(500).json({ success: false, error: "Login failed" });
   }
 }
+
 // ----------------------
 // REFRESH TOKEN
 // ----------------------
@@ -260,6 +275,9 @@ export async function refreshTokenController(req, res) {
   }
 }
 
+// ----------------------
+// LOGOUT
+// ----------------------
 export async function logoutController(req, res) {
   const ip = req.ip;
   const userAgent = req.headers["user-agent"];
