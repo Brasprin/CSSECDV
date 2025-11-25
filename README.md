@@ -51,7 +51,7 @@ Default credentials:
 - Admin: `admin@example.com`
 - Teacher: `teacher1@example.com`
 - Student: `student1@example.com`
-- Password: `password123`
+- Password: `P@ssword123`
 
 ## Features
 
